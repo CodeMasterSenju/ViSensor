@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".Main">
+
+    <item
+        android:id="@+id/record_data"
+        android:orderInCategory="100"
+        android:title="Menu"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_action_video">
+    </item>
+
+    <item
+        android:id="@+id/menu"
+        android:orderInCategory="100"
+        android:title="Menu"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_action_overflow">
+
+        <menu>
+            <item
+                android:id="@+id/menu_geräte"
+                android:title="Bluetooth Geräte"/>
+
+            <item
+                android:id="@+id/menu_hilfe"
+                android:title="Hilfe" />
+        </menu>
+    </item>
+</menu>
