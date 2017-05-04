@@ -88,6 +88,7 @@ public class BluetoothConnection extends AppCompatActivity{
 
                 if(device.getName() != null)
                 {
+                    //Hier ist ein kommentar.
                     bluetoothName.add(device.getName());
                 }
                 else
