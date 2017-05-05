@@ -3,11 +3,13 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEDGED"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <permission android:name="android.permission.BLUETOOTH" android:label="BLUETOOTH" />
     <permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <permission android:name="android.permission.BLUETOOTH_PRIVILEDGED"/>
 
     <application
         android:allowBackup="true"
@@ -22,7 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".BluetoothConnection"></activity>
+        <activity android:name=".BluetoothConnectionList"></activity>
         <activity android:name=".VRmenu"></activity>
         <activity android:name=".Help"></activity>
     </application>

@@ -66,7 +66,7 @@ public class Main extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_geräte:
-                Intent bluetoothIntent = new Intent(Main.this, BluetoothConnection.class);
+                Intent bluetoothIntent = new Intent(Main.this, BluetoothConnectionList.class);
                 Main.this.startActivity(bluetoothIntent);
                 return true;
 
