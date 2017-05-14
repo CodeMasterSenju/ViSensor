@@ -5,12 +5,12 @@ package com.artur.softwareproject;
  */
 
 import android.bluetooth.BluetoothAdapter;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Handler;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -28,6 +28,7 @@ public class Main extends AppCompatActivity {
     private ListAdapter adapter;
     private BluetoothAdapter bluetoothAdapter;
     private final int REQUEST_ENABLE_BT = 1;
+    private Intent serviceIntent;
 
     Handler handler = new Handler();
 
@@ -40,10 +41,18 @@ public class Main extends AppCompatActivity {
         sensorDataList = (ListView) findViewById(R.id.dataList);
         adapter = new SensorDataListAdapter(this, datenTypen, datenEinheit);
         sensorDataList.setAdapter(adapter);
+        serviceIntent = new Intent(this, BluetoothService.class);
 
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
+
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+
+        if(permissionCheck != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
         }
     }
 
@@ -65,6 +74,12 @@ public class Main extends AppCompatActivity {
     protected void onPause() {
         handler.removeCallbacks(timerRunnable);
         super.onPause();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopService(serviceIntent);
     }
 
     @Override

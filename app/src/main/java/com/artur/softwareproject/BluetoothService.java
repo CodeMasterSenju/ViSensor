@@ -17,6 +17,7 @@ import android.widget.Toast;
 import java.util.List;
 import java.util.UUID;
 
+import static android.content.ContentValues.TAG;
 import static java.util.UUID.fromString;
 
 /**
@@ -39,7 +40,7 @@ public class BluetoothService extends Service{
     private BluetoothGatt mBluetoothGatt;
     private BluetoothDevice bDevice;
     private Intent serviceIntent;
-    private int disconnecting, init;
+    private int init;
 
     private BluetoothGattCharacteristic tempData;
     private BluetoothGattCharacteristic tempConf;
@@ -51,7 +52,6 @@ public class BluetoothService extends Service{
     private BluetoothGattCharacteristic optConf;
 
     public BluetoothService(){
-        disconnecting = 0;
         init = 0;
     }
 
@@ -59,7 +59,7 @@ public class BluetoothService extends Service{
     public int onStartCommand(Intent intent, int flags, int startId) {
         this.serviceIntent = intent;
 
-        if(intent.getExtras().get("device") != null)
+        if(intent != null)
         {
             bDevice = (BluetoothDevice)intent.getExtras().get("device");
             mBluetoothGatt = bDevice.connectGatt(this, false, mGattCallback);
@@ -76,6 +76,7 @@ public class BluetoothService extends Service{
     @Override
     public void onDestroy() {
         mBluetoothGatt.disconnect();
+        stopService(serviceIntent);
     }
 
     private final BluetoothGattCallback mGattCallback =
@@ -95,14 +96,11 @@ public class BluetoothService extends Service{
                     }
                     else if(newState == BluetoothProfile.STATE_DISCONNECTING)
                     {
-                        tempConf.setValue(new byte[]{0x00});
-                        disconnecting = 0;
-                        mBluetoothGatt.writeCharacteristic(tempConf);
+
                     }
                     else if(newState == BluetoothProfile.STATE_DISCONNECTED)
                     {
                         serviceIntent.putExtra("bDisconnected", 1);
-                        stopService(serviceIntent);
                     }
                 }
 
@@ -149,32 +147,22 @@ public class BluetoothService extends Service{
 
                 @Override
                 public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-                    if(characteristic.getUuid().equals(UUID_IRT_CONF) && disconnecting == 0)
+                    if(characteristic.getUuid().equals(UUID_IRT_CONF))
                     {
                         humConf.setValue(new byte[]{0x01});
                         gatt.setCharacteristicNotification(humData, true);
                         mBluetoothGatt.writeCharacteristic(humConf);
                     }
-                    else if(characteristic.getUuid().equals(UUID_HUM_CONF) && disconnecting == 0)
+                    else if(characteristic.getUuid().equals(UUID_HUM_CONF))
                     {
                         optConf.setValue(new byte[]{0x01});
                         gatt.setCharacteristicNotification(optData, true);
                         mBluetoothGatt.writeCharacteristic(optConf);
                     }
-                    else if(characteristic.getUuid().equals(UUID_OPT_CONF) && disconnecting == 0)
+                    else if(characteristic.getUuid().equals(UUID_OPT_CONF))
                     {
                         gatt.setCharacteristicNotification(tempData, true);
                         mBluetoothGatt.readCharacteristic(tempData);
-                    }
-                    else if(characteristic.getUuid().equals(UUID_IRT_CONF) && disconnecting == 1)
-                    {
-                        humConf.setValue(new byte[]{0x00});
-                        mBluetoothGatt.writeCharacteristic(humConf);
-                    }
-                    else if(characteristic.getUuid().equals(UUID_HUM_CONF) && disconnecting == 1)
-                    {
-                        optConf.setValue(new byte[]{0x00});
-                        mBluetoothGatt.writeCharacteristic(optConf);
                     }
 
                 }

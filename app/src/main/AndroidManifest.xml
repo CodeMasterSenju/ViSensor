@@ -12,6 +12,8 @@
     <permission android:name="android.permission.BLUETOOTH" android:label="BLUETOOTH" />
     <permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <permission android:name="android.permission.BLUETOOTH_PRIVILEDGED"/>
+    <permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"

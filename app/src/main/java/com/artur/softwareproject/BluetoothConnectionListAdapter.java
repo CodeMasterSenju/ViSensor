@@ -27,8 +27,6 @@ public class BluetoothConnectionListAdapter extends ArrayAdapter {
 
     public TextView bluetoothConnectionName;
     public TextView bluetoothConnectionStatus;
-    public ImageView bluetoothConnectionImage;
-    public ProgressBar bluetoothConnectionProgress;
 
 
     public BluetoothConnectionListAdapter(Activity context, ArrayList<String> bluetoothAddress, ArrayList<String> bluetoothName, ArrayList<BluetoothDevice> bDevices){
@@ -44,8 +42,6 @@ public class BluetoothConnectionListAdapter extends ArrayAdapter {
     public View getView(final int position, View convertView, ViewGroup parent) {
         LayoutInflater ListInflater = LayoutInflater.from(getContext());
         View customView = ListInflater.inflate(R.layout.bluetooth_list_pattern, parent, false);
-
-        //bluetoothConnectionProgress = (ProgressBar) customView.findViewById(R.id.loadingAnim);
 
         bluetoothConnectionName = (TextView) customView.findViewById(R.id.bluetooth_connection_name);
         bluetoothConnectionName.setText(bluetoothAddress.get(position));
