@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.artur.softwareproject">
 
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEDGED"/>
@@ -27,6 +29,7 @@
         <activity android:name=".BluetoothConnectionList"></activity>
         <activity android:name=".VRmenu"></activity>
         <activity android:name=".Help"></activity>
+        <service android:enabled="true" android:name=".BluetoothService"></service>
     </application>
 
 </manifest>

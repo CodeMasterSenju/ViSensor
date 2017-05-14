@@ -4,9 +4,13 @@ package com.artur.softwareproject;
  * Created by artur_000 on 01.05.2017.
  */
 
+import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -18,10 +22,12 @@ import android.widget.Toast;
 
 public class Main extends AppCompatActivity {
 
-    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit", "Luftdruck"};
-    static public String [] datenEinheit = {"°C", "%", "lx", "hPa"};
+    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit"};
+    static public String [] datenEinheit = {"°C", "%", "lx"};
     private ListView sensorDataList;
     private ListAdapter adapter;
+    private BluetoothAdapter bluetoothAdapter;
+    private final int REQUEST_ENABLE_BT = 1;
 
     Handler handler = new Handler();
 
@@ -34,13 +40,18 @@ public class Main extends AppCompatActivity {
         sensorDataList = (ListView) findViewById(R.id.dataList);
         adapter = new SensorDataListAdapter(this, datenTypen, datenEinheit);
         sensorDataList.setAdapter(adapter);
+
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        }
     }
 
     Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
             ((BaseAdapter)adapter).notifyDataSetChanged();
-            handler.postDelayed(this, 5000); //run every 5 seconds
+            handler.postDelayed(this, 1000); //run every second
         }
     };
 
@@ -76,6 +87,7 @@ public class Main extends AppCompatActivity {
                 return true;
 
             case R.id.record_data:
+
                 Context context = getApplicationContext();
                 CharSequence text = "Recording data";
                 int duration = Toast.LENGTH_SHORT;

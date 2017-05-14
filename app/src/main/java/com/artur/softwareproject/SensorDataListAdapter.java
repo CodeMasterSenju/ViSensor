@@ -5,29 +5,65 @@ package com.artur.softwareproject;
  */
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import java.math.*;
+
 public class SensorDataListAdapter extends ArrayAdapter {
 
     private final Activity context;
     private final String[] datenTypen;
     private final String[] datenEinheit;
-    private static float[] dataValues = {0,0,0,0};
+    private static double[] dataValues = {0,0,0,0};
     private TextView dataItemValue;
     private TextView dataItemName;
     private TextView dataItemType;
+    private double tempValue;
+    private double humValue;
+    private double lightValue;
+
+    private final static String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
 
     public SensorDataListAdapter(Activity context, String[] datenTypen, String[] datenEinheit) {
         super(context, R.layout.sensordata_list_pattern, datenTypen);
         this.context = context;
         this.datenTypen = datenTypen;
         this.datenEinheit = datenEinheit;
+        LocalBroadcastManager.getInstance(context).registerReceiver(temperatureReceive, new IntentFilter("temperatureFilter"));
+        LocalBroadcastManager.getInstance(context).registerReceiver(humidityReceive, new IntentFilter("humidityFilter"));
+        LocalBroadcastManager.getInstance(context).registerReceiver(opticalReceive, new IntentFilter("lightFilter"));
     }
+
+    private BroadcastReceiver temperatureReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            tempValue = (double)intent.getExtras().get("ambientTemperature");
+        }
+    };
+
+    private BroadcastReceiver humidityReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            humValue = (double)intent.getExtras().get("humidity");
+        }
+    };
+
+    private BroadcastReceiver opticalReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            lightValue = (double)intent.getExtras().get("light");
+        }
+    };
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -41,12 +77,12 @@ public class SensorDataListAdapter extends ArrayAdapter {
         dataItemType.setText(datenEinheit[position]);
 
         dataItemValue = (TextView) customView.findViewById(R.id.dataItemValue);
-        //Here you enter the values recieved from SensorTag (instead of 2,3,4,5).
-        dataValues[0] += 2;
-        dataValues[1] += 3;
-        dataValues[2] += 4;
-        dataValues[3] += 5;
-        dataItemValue.setText(Float.toString(dataValues[position]));
+
+        dataValues[0] = Math.floor(tempValue * 100) / 100;
+        dataValues[1] = Math.floor(humValue * 100) / 100;
+        dataValues[2] = Math.floor(lightValue * 100) / 100;
+
+        dataItemValue.setText(Double.toString(dataValues[position]));
 
         customView.setOnClickListener(new View.OnClickListener() {
             @Override
