@@ -1,5 +1,7 @@
 package com.artur.softwareproject;
 
+import android.util.Log;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -19,15 +21,26 @@ public class ModelConstructor
             double x = coordinates[i][0];
             double y = coordinates[i][1];
             Vector2D v = new Vector2D(x,y);
+            vectors[i] = v;
         }
+        Log.d("translateToVectors","done");
 
         Vector2D[] outerPoints = getOuterPoints(vectors);
+        Log.d("getOuterPoints","done "+ outerPoints.length);
 
         expandOuterPoints(outerPoints);
+        Log.d("expandOuterPoints","done");
 
         sortVectors(outerPoints);
+        Log.d("sortVectors","done");
+
+        for (int i = 0; i < outerPoints.length; i++)
+        {
+            Log.d("x,y",outerPoints[i].dX + " , " + outerPoints[i].dY);
+        }
 
         //Create obj. file
+
 
         return true;
     }
@@ -36,16 +49,17 @@ public class ModelConstructor
     {
         ArrayList<Vector2D> outerPoints = new ArrayList<>();
         Vector2D middle = getMedian(vectors);
+        Log.d("getMedian","done");
 
         for (int i = 0; i < vectors.length; i++)
         {
             boolean isouterpoint = true;
             Vector2D a = vectors[i].sub(middle);
-            double al = a.length();
+            double al = a.dotProduct(a);
 
             for (int j = 0; j < vectors.length; j++)
             {
-                if(vectors[j].sub(middle).dotProduct(a) >= al)
+                if(vectors[j].sub(middle).dotProduct(a) >= al && i!=j)
                 {
                     isouterpoint = false;
                     break;
@@ -57,7 +71,8 @@ public class ModelConstructor
                 outerPoints.add(vectors[i]);
             }
         }
-        Vector2D[] ret = (Vector2D[]) outerPoints.toArray();
+        Vector2D[] ret = new Vector2D[outerPoints.size()];
+        ret = outerPoints.toArray(ret);
         return ret;
     }
 
@@ -97,7 +112,7 @@ public class ModelConstructor
 
         for (int i = 0; i < v.length; i++)
         {
-            v[i].scale(factor);
+            v[i] = v[i].scale(factor);
         }
     }
 
@@ -107,9 +122,11 @@ public class ModelConstructor
 
         for (int i = 0; i < vectors.length; i++)
         {
-            middle.add(vectors[i]);
+            middle = middle.add(vectors[i]);
         }
-        middle.scale(1.0/vectors.length);
+        middle = middle.scale(1.0/(double)vectors.length);
+
+        Log.d("Middle: ",middle.dX + " , " + middle.dY);
 
         return middle;
     }
