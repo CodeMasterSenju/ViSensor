@@ -59,7 +59,7 @@ public class ModelConstructor
 
             for (int j = 0; j < vectors.length; j++)
             {
-                if(vectors[j].sub(middle).dotProduct(a) >= al && i!=j)
+                if(vectors[j].sub(middle).dotProduct(a) > al)
                 {
                     isouterpoint = false;
                     break;
@@ -67,6 +67,17 @@ public class ModelConstructor
             }
 
             if (isouterpoint)
+            {
+                for (int j = 0; j < outerPoints.size(); j++)
+                {
+                    if(outerPoints.get(j).dX==vectors[i].dX && outerPoints.get(j).dY==vectors[i].dY)
+                    {
+                        isouterpoint=false;
+                    }
+                }
+            }
+
+            if(isouterpoint)
             {
                 outerPoints.add(vectors[i]);
             }
@@ -133,12 +144,13 @@ public class ModelConstructor
 
     private void sortVectors(Vector2D[] v)
     {
+        Vector2D middle = getMedian(v);
         double deg;
 
         for (int i = 0; i < v.length; i++)
         {
-            deg = acos(v[i].normalize().getdX());
-            if(v[i].getdY() < 0) deg = 2*PI - deg;
+            deg = acos(v[i].sub(middle).normalize().getdX());
+            if(v[i].sub(middle).getdY() < 0) deg = 2*PI - deg;
             v[i].setDegree(deg);
         }
         Arrays.sort(v);
