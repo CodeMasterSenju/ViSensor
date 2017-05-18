@@ -98,6 +98,11 @@ public class Vector2D implements Comparable<Vector2D>
         this.degree = degree;
     }
 
+    public Vector2D getNormalVector()
+    {
+        return new Vector2D(this.dY*(-1),this.dX).normalize();
+    }
+
     @Override
     public int compareTo(@NonNull Vector2D o)
     {
