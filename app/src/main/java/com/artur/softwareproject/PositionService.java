@@ -90,6 +90,11 @@ public class PositionService extends Service {
             gpsDistanz[0] = (gps[0] - ursprung[0]) * mProBreitengrad * Math.cos(gps[1]);
             gpsDistanz[1] = (gps[1] - ursprung[1]) * mProBreitengrad;
             gpsDistanz[2] = gps[2];
+
+            Intent gpsDistIntent = new Intent();
+            gpsIntent.putExtra("gpsDistanz", gpsDistanz);
+            gpsIntent.setAction("gpsDistFilter");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(gpsDistIntent);
         }
     };
 
@@ -120,6 +125,11 @@ public class PositionService extends Service {
             acc_1[0] = acc_2[0];
             acc_1[1] = acc_2[1];
             acc_1[2] = acc_2[2];
+
+            Intent accPosIntent = new Intent();
+            gpsIntent.putExtra("accPosition", accDistanz);
+            gpsIntent.setAction("accPosFilter");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(accPosIntent);
         }
     };
 
@@ -159,7 +169,7 @@ public class PositionService extends Service {
 
     public double[] getGpsDistanz() {return gpsDistanz;}
 
-    public double[] getAcc() {return acc_filter;}
+    public double[] getAccDistanz() {return acc_filter;}
 
 
     //Setzt den Koordinatenursprung

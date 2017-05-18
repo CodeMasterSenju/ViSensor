@@ -5,10 +5,13 @@ package com.artur.softwareproject;
  */
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -22,15 +25,17 @@ import android.widget.Toast;
 
 public class Main extends AppCompatActivity {
 
-    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit"};
-    static public String [] datenEinheit = {"°C", "%", "lx"};
+    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit","GPS x", "GPS y", "GPS z"};
+    static public String [] datenEinheit = {"°C", "%", "lx", "grad", "grad", "meter"};
     private ListView sensorDataList;
     private ListAdapter adapter;
     private BluetoothAdapter bluetoothAdapter;
     private final int REQUEST_ENABLE_BT = 1;
     private Intent serviceIntent;
+    private Intent posServiceIntent;
 
     Handler handler = new Handler();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,12 +53,16 @@ public class Main extends AppCompatActivity {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-        //int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
-//        if(permissionCheck != PackageManager.PERMISSION_GRANTED)
-//        {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
-//        }
+        if(permissionCheck != PackageManager.PERMISSION_GRANTED)
+        {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+        }
+
+        posServiceIntent = new Intent(this, PositionService.class);
+        startService(posServiceIntent);
+
     }
 
     Runnable timerRunnable = new Runnable() {
@@ -80,6 +89,7 @@ public class Main extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopService(serviceIntent);
+        stopService(posServiceIntent);
     }
 
     @Override
@@ -114,4 +124,5 @@ public class Main extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
 }
