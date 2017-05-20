@@ -1,12 +1,9 @@
 package com.artur.softwareproject;
 
 import android.util.Log;
-import android.util.Pair;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Vector;
 
 import static java.lang.Math.*;
 
@@ -16,7 +13,14 @@ import static java.lang.Math.*;
 
 public class ModelConstructor
 {
-
+    /**
+     * Create A 3D-Model of a Room surrounding the passed coordinates
+     *
+     * @param startingCoordinates
+     * @param coordinates         Array of coordinates that should be surrounded by the 3D-Model
+     * @param path                Path to the location where the .obj file should be saved
+     * @return was the .obj file successfully created?
+     */
     public boolean createModel(double[] startingCoordinates, double[][] coordinates, String path)
     {
         Vector2D[] vectors = translateToVectors(coordinates);
@@ -32,6 +36,12 @@ public class ModelConstructor
         return true;
     }
 
+    /**
+     * get the vectors, that when connected enclose all passed vectors, in the right order
+     *
+     * @param vectors Set of Vectors to be surrounded
+     * @return Set of Vectors surrounding the passed Vectors
+     */
     private Vector2D[] getSurroundingPoints(Vector2D[] vectors)
     {
         Vector2D[] surroundingPoints = getOuterPoints(vectors);
@@ -51,6 +61,12 @@ public class ModelConstructor
         return surroundingPoints;
     }
 
+    /**
+     * Translate two-dimensional double array to Vector2D array
+     *
+     * @param coordinates coordinates to be translated
+     * @return passed coordinates as 2D-Vectors
+     */
     private Vector2D[] translateToVectors(double[][] coordinates)
     {
         Vector2D[] vectors = new Vector2D[coordinates.length];
@@ -65,6 +81,12 @@ public class ModelConstructor
         return vectors;
     }
 
+    /**
+     * get the outer points from a Set of Vectors
+     *
+     * @param vectors set of Vectors
+     * @return all outer points of the passed vectors
+     */
     private Vector2D[] getOuterPoints(Vector2D[] vectors)
     {
         Vector2D[] initialOuterPoints = getInitialOuterPoints(vectors);
@@ -77,12 +99,12 @@ public class ModelConstructor
 
         boolean loop = true;
 
-        while (loop)
+        while (loop) //do until all vectors are enclosed by the outerPoints
         {
             loop = false;
             int s = outerPoints.size();
 
-            for (int i = 0; i < s; i++)
+            for (int i = 0; i < s; i++) //do for all edges of the surrounding graph
             {
                 int j = i + 1;
                 if (j == s) j = 0;
@@ -93,30 +115,30 @@ public class ModelConstructor
                 Vector2D e = v2.sub(v1);
                 Vector2D n = e.getNormalVector();
 
-                if (v1.sub(avg).dotProduct(n) < 0)
+                if (v1.sub(avg).dotProduct(n) < 0) //find the outward facing normal vector to an edge
                 {
                     n = n.scale(-1.0);
                 }
 
                 Vector2D max = v1;
 
-                for (int k = 0; k < vectors.length; k++)
+                for (int k = 0; k < vectors.length; k++) //find point on the outside of the OuterPoint graph
                 {
-                    if (vectors[k].sub(avg).dotProduct(n) > max.sub(avg).dotProduct(n) && vectors[k].sub(avg).dotProduct(e) > v1.sub(avg).dotProduct(e) &&
-                            vectors[k].sub(avg).dotProduct(e) < v2.sub(avg).dotProduct(e))
+                    if (vectors[k].dotProduct(n) > max.dotProduct(n) && vectors[k].dotProduct(e) > v1.dotProduct(e) &&
+                            vectors[k].dotProduct(e) < v2.dotProduct(e))
                     {
                         max = vectors[k];
                     }
                 }
 
-                if (max != v1 && max != v2 && !outerPoints.contains(max))
+                if (max != v1 && max != v2 && !outerPoints.contains(max)) //if point was found add to outerPoints
                 {
                     loop = true;
                     outerPoints.add(max);
                 }
             }
 
-            if (loop)
+            if (loop)//sort outerPoints to represent the enclosing graph again
             {
                 sortVectors(outerPoints);
             }
@@ -130,6 +152,12 @@ public class ModelConstructor
 
     }
 
+    /**
+     * get a few outer points from the passed Vectors
+     *
+     * @param vectors Set of Vectors
+     * @return few outer points of the passed vectors
+     */
     private Vector2D[] getInitialOuterPoints(Vector2D[] vectors)
     {
         ArrayList<Vector2D> outerPoints = new ArrayList<>();
@@ -183,6 +211,11 @@ public class ModelConstructor
         return ret;
     }
 
+    /**
+     * Scale the Vectors to increase the size of the surrounded area by a fixed value
+     *
+     * @param v surrounding Vectors
+     */
     private void expandOuterPoints(Vector2D[] v)
     {
         double extraSpace = 0.5;
@@ -223,6 +256,12 @@ public class ModelConstructor
         }
     }
 
+    /**
+     * get the average vector from a set of vectors
+     *
+     * @param vectors set of vectors
+     * @return average vector
+     */
     public Vector2D getAverage(Vector2D[] vectors)
     {
         Vector2D avg = new Vector2D(0, 0);
@@ -238,6 +277,12 @@ public class ModelConstructor
         return avg;
     }
 
+    /**
+     * get the vector in the middle of the passed vectors
+     *
+     * @param v set of vectors
+     * @return middle-vector
+     */
     public Vector2D getMiddle(Vector2D[] v)
     {
         Vector2D leftmost = v[0];
@@ -271,6 +316,11 @@ public class ModelConstructor
         return new Vector2D(mx, my);
     }
 
+    /**
+     * sort vectors into the right order
+     *
+     * @param v set of vectors
+     */
     private void sortVectors(Vector2D[] v)
     {
         Vector2D avg = getAverage(v);
@@ -285,6 +335,11 @@ public class ModelConstructor
         Arrays.sort(v);
     }
 
+    /**
+     * sort vectors into the right order
+     *
+     * @param v set of vectors
+     */
     private void sortVectors(ArrayList<Vector2D> v)
     {
         Vector2D[] vec = new Vector2D[v.size()];
@@ -292,6 +347,7 @@ public class ModelConstructor
 
         sortVectors(vec);
 
-        v = new ArrayList<>(Arrays.asList(vec));
+        v.clear();
+        v.addAll(Arrays.asList(vec));
     }
 }
