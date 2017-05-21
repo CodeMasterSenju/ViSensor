@@ -161,10 +161,40 @@ public class ModelConstructor
     private Vector2D[] getInitialOuterPoints(Vector2D[] vectors)
     {
         ArrayList<Vector2D> outerPoints = new ArrayList<>();
+
+        if(vectors.length <= 2)//if there are too few points return rectangle
+        {
+            double xMin = -3;
+            double yMin = -3;
+            double xMax = 3;
+            double yMax = 3;
+
+            for (int i = 0; i < vectors.length; i++)
+            {
+                if(vectors[i].dX < xMin)
+                    xMin = vectors[i].dX;
+                if(vectors[i].dX > xMax)
+                    xMax = vectors[i].dX;
+                if(vectors[i].dY < yMin)
+                    yMin = vectors[i].dY;
+                if(vectors[i].dY > yMax)
+                    yMax = vectors[i].dY;
+            }
+            outerPoints.add(new Vector2D(xMin,yMin));
+            outerPoints.add(new Vector2D(xMin,yMax));
+            outerPoints.add(new Vector2D(xMax,yMin));
+            outerPoints.add(new Vector2D(xMax,yMax));
+
+            Vector2D[] ret = new Vector2D[outerPoints.size()];
+            ret = outerPoints.toArray(ret);
+            return ret;
+        }
+
         Vector2D avg = getAverage(vectors);
         Vector2D middle = getMiddle(vectors);
         Vector2D[] midPoints = {avg, middle};
         Log.d("getAverage", "done");
+
 
         for (int i = 0; i < vectors.length; i++)
         {
@@ -224,7 +254,7 @@ public class ModelConstructor
 
         for (int i = 0; i < extraVectors.length; i++)
         {
-            extraVectors[i] = new Vector2D(0,0);
+            extraVectors[i] = new Vector2D(0, 0);
         }
 
 
@@ -236,8 +266,8 @@ public class ModelConstructor
 
         for (int i = 0; i < v.length; i++)// find direction in which each vector should be moved
         {
-            int j=i+1;
-            if(j==v.length)
+            int j = i + 1;
+            if (j == v.length)
             {
                 j = 0;
             }
@@ -251,15 +281,15 @@ public class ModelConstructor
                 n = n.scale(-1.0);
             }
 
-            extraVectors[i]=extraVectors[i].add(n);
-            extraVectors[j]=extraVectors[j].add(n);
+            extraVectors[i] = extraVectors[i].add(n);
+            extraVectors[j] = extraVectors[j].add(n);
         }
 
         for (int i = 0; i < v.length; i++)// find amount by which each vector should be moved
         {
-            int j=i+1;
-            if(j==v.length)
-                j=0;
+            int j = i + 1;
+            if (j == v.length)
+                j = 0;
 
             v1 = v[i];
             v2 = v[j];
@@ -270,9 +300,9 @@ public class ModelConstructor
                 n = n.scale(-1.0);
             }
 
-            double t = (extraSpace)/(extraVectors[i].dotProduct(n));
+            double t = (extraSpace) / (extraVectors[i].dotProduct(n));
 
-            extraVectors[i]=extraVectors[i].scale(t);
+            extraVectors[i] = extraVectors[i].scale(t);
         }
 
         for (int i = 0; i < v.length; i++)// move vectors
