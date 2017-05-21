@@ -212,7 +212,7 @@ public class ModelConstructor
     }
 
     /**
-     * Scale the Vectors to increase the size of the surrounded area by a fixed value
+     * move all edges between the vectors outwards by a fixed value
      *
      * @param v surrounding Vectors
      */
@@ -220,39 +220,64 @@ public class ModelConstructor
     {
         double extraSpace = 0.5;
 
-        Vector2D leftmost = v[0];
-        Vector2D rightmost = v[0];
-        Vector2D upmost = v[0];
-        Vector2D downmost = v[0];
+        Vector2D[] extraVectors = new Vector2D[v.length];
 
-        for (int i = 0; i < v.length; i++)
+        for (int i = 0; i < extraVectors.length; i++)
         {
-            if (v[i].getdX() < leftmost.getdX())
-            {
-                leftmost = v[i];
-            }
-            if (v[i].getdX() > rightmost.getdX())
-            {
-                rightmost = v[i];
-            }
-            if (v[i].getdY() < downmost.getdY())
-            {
-                downmost = v[i];
-            }
-            if (v[i].getdY() > upmost.getdY())
-            {
-                upmost = v[i];
-            }
+            extraVectors[i] = new Vector2D(0,0);
         }
 
-        double lx = rightmost.getdX() - leftmost.getdX();
-        double ly = upmost.getdY() - downmost.getdY();
-        double size = min(lx, ly);
-        double factor = (size + 2 * extraSpace) / size;
 
-        for (int i = 0; i < v.length; i++)
+        Vector2D v1 = null;
+        Vector2D v2 = null;
+        Vector2D e = null;
+        Vector2D n = null;
+        Vector2D avg = getAverage(v);
+
+        for (int i = 0; i < v.length; i++)// find direction in which each vector should be moved
         {
-            v[i] = v[i].scale(factor);
+            int j=i+1;
+            if(j==v.length)
+            {
+                j = 0;
+            }
+
+            v1 = v[i];
+            v2 = v[j];
+            e = v2.sub(v1);
+            n = e.getNormalVector();
+            if (v1.sub(avg).dotProduct(n) < 0)
+            {
+                n = n.scale(-1.0);
+            }
+
+            extraVectors[i]=extraVectors[i].add(n);
+            extraVectors[j]=extraVectors[j].add(n);
+        }
+
+        for (int i = 0; i < v.length; i++)// find amount by which each vector should be moved
+        {
+            int j=i+1;
+            if(j==v.length)
+                j=0;
+
+            v1 = v[i];
+            v2 = v[j];
+            e = v2.sub(v1);
+            n = e.getNormalVector();
+            if (v1.sub(avg).dotProduct(n) < 0)
+            {
+                n = n.scale(-1.0);
+            }
+
+            double t = (extraSpace)/(extraVectors[i].dotProduct(n));
+
+            extraVectors[i]=extraVectors[i].scale(t);
+        }
+
+        for (int i = 0; i < v.length; i++)// move vectors
+        {
+            v[i] = v[i].add(extraVectors[i]);
         }
     }
 
