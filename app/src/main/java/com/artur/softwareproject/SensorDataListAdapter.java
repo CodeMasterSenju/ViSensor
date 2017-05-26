@@ -2,6 +2,7 @@ package com.artur.softwareproject;
 
 /**
  * Created by artur_000 on 01.05.2017.
+ * Liste zur Darstellung von Sensordaten
  */
 
 import android.app.Activity;
@@ -29,6 +30,7 @@ public class SensorDataListAdapter extends ArrayAdapter {
     private final String[] datenEinheit;
     private static double[] dataValues = {0,0,0,0,0,0,0};
     private double[] gps = {0,0,0};
+    private double hDiff = 0;
     private TextView dataItemValue;
     private TextView dataItemName;
     private TextView dataItemType;
@@ -47,7 +49,9 @@ public class SensorDataListAdapter extends ArrayAdapter {
         LocalBroadcastManager.getInstance(context).registerReceiver(temperatureReceive, new IntentFilter("temperatureFilter"));
         LocalBroadcastManager.getInstance(context).registerReceiver(humidityReceive, new IntentFilter("humidityFilter"));
         LocalBroadcastManager.getInstance(context).registerReceiver(opticalReceive, new IntentFilter("lightFilter"));
-        LocalBroadcastManager.getInstance(context).registerReceiver(gpsReceive, new IntentFilter("gpsFilter"));
+        LocalBroadcastManager.getInstance(context).registerReceiver(gpsReceive, new IntentFilter("gpsDistFilter"));
+        LocalBroadcastManager.getInstance(context).registerReceiver(baroReceive, new IntentFilter("hDiffFilter"));
+
     }
 
     private BroadcastReceiver temperatureReceive = new BroadcastReceiver() {
@@ -60,7 +64,14 @@ public class SensorDataListAdapter extends ArrayAdapter {
     private BroadcastReceiver gpsReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            gps = (double[])intent.getExtras().get("gpsRawData");
+            gps = (double[])intent.getExtras().get("gpsDistanz");
+        }
+    };
+
+    private BroadcastReceiver baroReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            hDiff = (double)intent.getExtras().get("hDiff");
         }
     };
 
@@ -96,7 +107,7 @@ public class SensorDataListAdapter extends ArrayAdapter {
         dataValues[2] = Math.floor(lightValue * 100) / 100;
         dataValues[3] = Math.floor(gps[0] * 100) / 100;
         dataValues[4] = Math.floor(gps[1] * 100) / 100;
-        dataValues[5] = Math.floor(gps[2] * 100) / 100;
+        dataValues[5] = Math.floor(hDiff * 100) / 100;
 
         dataItemValue.setText(Double.toString(dataValues[position]));
 

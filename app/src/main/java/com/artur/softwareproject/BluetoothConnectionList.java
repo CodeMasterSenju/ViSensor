@@ -17,6 +17,7 @@ import java.util.ArrayList;
 
 /**
  * Created by artur_000 on 01.05.2017.
+ * Liste um verfügbare Bluetooth-Geräte anzuzeigen.
  */
 
 public class BluetoothConnectionList extends AppCompatActivity{
@@ -28,9 +29,9 @@ public class BluetoothConnectionList extends AppCompatActivity{
     private boolean mScanning;
     private Handler mHandler;
 
-    ArrayList<String> bluetoothName = new ArrayList<>();
-    ArrayList<String> bluetoothAddress = new ArrayList<>();
-    ArrayList<BluetoothDevice> bDevices = new ArrayList<>();
+    private ArrayList<String> bluetoothName = new ArrayList<>();
+    private ArrayList<String> bluetoothAddress = new ArrayList<>();
+    private ArrayList<BluetoothDevice> bDevices = new ArrayList<>();
 
     private static final long SCAN_PERIOD = 5000;
 

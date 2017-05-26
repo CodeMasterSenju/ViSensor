@@ -2,6 +2,7 @@ package com.artur.softwareproject;
 
 /**
  * Created by artur_000 on 01.05.2017.
+ * Zeigt Sensordaten in Echtzeit an.
  */
 
 import android.bluetooth.BluetoothAdapter;
@@ -14,10 +15,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -25,8 +28,8 @@ import android.widget.Toast;
 
 public class Main extends AppCompatActivity {
 
-    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit","GPS x", "GPS y", "GPS z"};
-    static public String [] datenEinheit = {"°C", "%", "lx", "grad", "grad", "meter"};
+    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit","GPS x", "GPS y", "Baro z"};
+    static public String [] datenEinheit = {"°C", "%", "lx", "m", "m", "m"};
     private ListView sensorDataList;
     private ListAdapter adapter;
     private BluetoothAdapter bluetoothAdapter;
@@ -123,6 +126,13 @@ public class Main extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    public void record(View view) {
+        Intent resetIntent = new Intent();
+        resetIntent.putExtra("reset", "");
+        resetIntent.setAction("resetFilter");
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
     }
 
 }

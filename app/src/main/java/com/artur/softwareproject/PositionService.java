@@ -12,50 +12,10 @@ import android.util.Log;
 
 /**
  * Created by Martin Kern on 16.05.2017.
- */
-
-/**
  * Dieser Service ermittelt die Aktuelle Position in karthesischen Koordinaten mit Hilfe von
- * GPS, Beschleunigungssensor und Magnetometer. Folgende Funktionen sind wichtig:
- * "resetUrsprung()":   Setzt, falls GPS verfügbar ist, den Koordinatenursprung.
- *                      Diese Funktion wird aufgerufen, wenn eine Aufzeichnung begonnen wird.
- *
+ * GPS und Barometer.
  */
 
-/*Folgender Code muss in jeder Activity vorhanden sein, die diesen Service nutzen möchte
-
-private PositionService mService = null;
-
-private ServiceConnection posConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            PositionService.LocalBinder binder = (PositionService.LocalBinder) service;
-            mService = binder.getService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mService = null;
-        }
-    };
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        Intent intent = new Intent(this, PositionService.class);
-        bindService(intent, posConnection, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (mService != null) {
-            unbindService(posConnection);
-            mService = null;
-        }
-    }
-
- */
 
 public class PositionService extends Service {
     private static final String TAG = PositionService.class.getSimpleName();
@@ -65,21 +25,14 @@ public class PositionService extends Service {
     private double[] gpsDistanz = {0,0,0}; //Aktuelle Position in karthesischen Koordinaten in m
     private final double mProBreitengrad = 111133; //Abstand zwischen zwei Breitengraden in Metern.
 
-    private double[] acc_1 = {0,0,0}; //Vergangene Messung
-    private double[] acc_filter = {0,0,0};
-    private double[] acc_2 = {0,0,0,0}; //Aktuelle Messung mit Zeitdifferenz
-    private double[] vel = {0,0,0}; //Geschwindigkeit. Berechnet us der Beschleunigung
-    private double dt = 0;
-    private double[] accDistanz = {0,0,0}; //Position in Karthesischen Koordinaten. Aus der Beschleunigung berechnet.
+    private double startDruck = 0; //Wird genutzt um sich den Druck zum Messbeginn zu merken
+    private double druck = 0; //Aktueller Luftdruck
+    private double hoehendifferenz = 0;
+    private final double mProPascal = 0.11; //Pro Pascal ca. 11cm Höhenunterschied.
 
-    //Filter
-    private Mittelwertfilter accFX = new Mittelwertfilter(5);
-    private Mittelwertfilter accFY = new Mittelwertfilter(5);
-    private Mittelwertfilter accFZ = new Mittelwertfilter(5);
 
     //Formalitäten
-    private final IBinder positionBinder = new LocalBinder();
-    private Intent gpsIntent, accIntent;
+    private Intent gpsIntent, baroIntent;
 
     private BroadcastReceiver gpsReceive = new BroadcastReceiver() {
         @Override
@@ -92,58 +45,28 @@ public class PositionService extends Service {
             gpsDistanz[2] = gps[2];
 
             Intent gpsDistIntent = new Intent();
-            gpsIntent.putExtra("gpsDistanz", gpsDistanz);
-            gpsIntent.setAction("gpsDistFilter");
+            gpsDistIntent.putExtra("gpsDistanz", gpsDistanz);
+            gpsDistIntent.setAction("gpsDistFilter");
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(gpsDistIntent);
         }
     };
 
-    private BroadcastReceiver accReceive = new BroadcastReceiver() {
+    private BroadcastReceiver baroReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            acc_2 = (double[])intent.getExtras().get("accRawData");
+            hoehendifferenz = (startDruck - druck)* 100 * mProPascal;
 
-            //Versuch, durch Integration eine Distanz zu berechnen.
-
-            acc_filter[0] = accFX.output(acc_1[0]);
-            acc_filter[1] = accFY.output(acc_1[1]);
-            acc_filter[2] = accFZ.output(acc_1[2]);
-
-            dt = acc_2[3]/1000000000.0d;
-
-
-
-
-            accDistanz[0] += 0.5d * acc_filter[0] * dt * dt + vel[0] * dt;
-            accDistanz[1] += 0.5d * acc_filter[1] * dt * dt + vel[1] * dt;
-            accDistanz[2] += 0.5d * acc_filter[2] * dt * dt + vel[2] * dt;
-
-            vel[0] += acc_filter[0] * dt;
-            vel[1] += acc_filter[1] * dt;
-            vel[2] += acc_filter[2] * dt;
-
-            acc_1[0] = acc_2[0];
-            acc_1[1] = acc_2[1];
-            acc_1[2] = acc_2[2];
-
-            Intent accPosIntent = new Intent();
-            gpsIntent.putExtra("accPosition", accDistanz);
-            gpsIntent.setAction("accPosFilter");
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(accPosIntent);
+            Intent hDiffIntent = new Intent();
+            hDiffIntent.putExtra("hDiff", hoehendifferenz);
+            hDiffIntent.setAction("hDiffFilter");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(hDiffIntent);
         }
     };
 
-    //LocalBinder=======================================================================================
-    public class LocalBinder extends Binder {
-        public PositionService getService() {
-            return PositionService.this;
-        }
-    }
-//LocalBinder=Ende==================================================================================
 
     @Override
     public IBinder onBind(Intent intent) {
-        return positionBinder;
+        return null;
     }
 
     @Override
@@ -151,43 +74,36 @@ public class PositionService extends Service {
         super.onCreate();
         Log.d(TAG, "PositionService wurde erzeugt.");
         LocalBroadcastManager.getInstance(this).registerReceiver(gpsReceive, new IntentFilter("gpsFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(accReceive, new IntentFilter("accFilter"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(baroReceive, new IntentFilter("baroFilter"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(resetUrsprung, new IntentFilter("resetFilter"));
         gpsIntent = new Intent(this, GpsService.class);
-        accIntent = new Intent(this, AccService.class);
+        baroIntent = new Intent(this, BaroService.class);
         startService(gpsIntent);
-        startService(accIntent);
-
+        startService(baroIntent);
     }
 
     public void onDestroy() {
         super.onDestroy();
         stopService(gpsIntent);
-        stopService(accIntent);
+        stopService(baroIntent);
     }
-
-    public double[] getGps() {return gps;}
-
-    public double[] getGpsDistanz() {return gpsDistanz;}
-
-    public double[] getAccDistanz() {return acc_filter;}
 
 
     //Setzt den Koordinatenursprung
-    public void resetUrsprung() {
-        ursprung[0] = gps[0];
-        ursprung[1] = gps[1];
-        ursprung[2] = gps[2];
+    private BroadcastReceiver resetUrsprung = new BroadcastReceiver() {
 
-        accDistanz[0] = 0;
-        accDistanz[1] = 0;
-        accDistanz[2] = 0;
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            ursprung[0] = gps[0];
+            ursprung[1] = gps[1];
+            ursprung[2] = gps[2];
 
-        gpsDistanz[0] = 0;
-        gpsDistanz[1] = 0;
-        gpsDistanz[2] = 0;
+            gpsDistanz[0] = 0;
+            gpsDistanz[1] = 0;
+            gpsDistanz[2] = 0;
 
-        vel[0] = 0;
-        vel[1] = 0;
-        vel[2] = 0;
-    }
+            startDruck = druck;
+        }
+
+    };
 }

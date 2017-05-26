@@ -31,7 +31,7 @@
         <activity android:name=".Help"/>
         <service android:enabled="true" android:name=".BluetoothService"/>
         <service android:name="GpsService"/>
-        <service android:name="AccService"/>
+        <service android:name=".BaroService"/>
         <service android:name="PositionService"/>
     </application>
 
