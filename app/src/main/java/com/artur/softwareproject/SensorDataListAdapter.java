@@ -29,16 +29,31 @@ public class SensorDataListAdapter extends ArrayAdapter {
     private final String[] datenTypen;
     private final String[] datenEinheit;
     private static double[] dataValues = {0,0,0,0,0,0,0};
-    private double[] gps = {0,0,0};
-    private double hDiff = 0;
     private TextView dataItemValue;
     private TextView dataItemName;
     private TextView dataItemType;
-    private double tempValue;
-    private double humValue;
-    private double lightValue;
+    private JsonData json = new JsonData();
 
     private final static String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
+
+    public class JsonData {//Daten kommen in eine Klasse um später in einer JSON-Datei gespeichert zu werden.
+
+        public JsonData() {
+            temperature = 0;
+            humidity = 0;
+            illuminance = 0;
+            xPos = 0;
+            yPos = 0;
+            zPos = 0;
+        }
+
+        public double temperature;
+        public double humidity;
+        public double illuminance;
+        public double xPos;
+        public double yPos;
+        public double zPos;
+    }
 
 
     public SensorDataListAdapter(Activity context, String[] datenTypen, String[] datenEinheit) {
@@ -57,35 +72,38 @@ public class SensorDataListAdapter extends ArrayAdapter {
     private BroadcastReceiver temperatureReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            tempValue = (double)intent.getExtras().get("ambientTemperature");
+            json.temperature = (double)intent.getExtras().get("ambientTemperature");
+
         }
     };
 
     private BroadcastReceiver gpsReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            gps = (double[])intent.getExtras().get("gpsDistanz");
+            double[] gps = (double[])intent.getExtras().get("gpsDistanz");
+            json.xPos = gps[0];
+            json.yPos = gps[1];
         }
     };
 
     private BroadcastReceiver baroReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            hDiff = (double)intent.getExtras().get("hDiff");
+            json.zPos = (double)intent.getExtras().get("hDiff");
         }
     };
 
     private BroadcastReceiver humidityReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            humValue = (double)intent.getExtras().get("humidity");
+            json.humidity = (double)intent.getExtras().get("humidity");
         }
     };
 
     private BroadcastReceiver opticalReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            lightValue = (double)intent.getExtras().get("light");
+            json.illuminance = (double)intent.getExtras().get("light");
         }
     };
 
@@ -102,12 +120,12 @@ public class SensorDataListAdapter extends ArrayAdapter {
 
         dataItemValue = (TextView) customView.findViewById(R.id.dataItemValue);
 
-        dataValues[0] = Math.floor(tempValue * 100) / 100;
-        dataValues[1] = Math.floor(humValue * 100) / 100;
-        dataValues[2] = Math.floor(lightValue * 100) / 100;
-        dataValues[3] = Math.floor(gps[0] * 100) / 100;
-        dataValues[4] = Math.floor(gps[1] * 100) / 100;
-        dataValues[5] = Math.floor(hDiff * 100) / 100;
+        dataValues[0] = Math.floor(json.temperature * 100) / 100;
+        dataValues[1] = Math.floor(json.humidity * 100) / 100;
+        dataValues[2] = Math.floor(json.illuminance * 100) / 100;
+        dataValues[3] = Math.floor(json.xPos * 100) / 100;
+        dataValues[4] = Math.floor(json.yPos * 100) / 100;
+        dataValues[5] = Math.floor(json.zPos * 100) / 100;
 
         dataItemValue.setText(Double.toString(dataValues[position]));
 
@@ -124,5 +142,8 @@ public class SensorDataListAdapter extends ArrayAdapter {
         return customView;
     }
 
+    public JsonData getJson() {
+        return json;
+    }
 
 }

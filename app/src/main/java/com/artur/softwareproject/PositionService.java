@@ -103,6 +103,16 @@ public class PositionService extends Service {
             gpsDistanz[2] = 0;
 
             startDruck = druck;
+
+            Intent gpsDistIntent = new Intent();
+            gpsDistIntent.putExtra("gpsDistanz", gpsDistanz);
+            gpsDistIntent.setAction("gpsDistFilter");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(gpsDistIntent);
+
+            Intent hDiffIntent = new Intent();
+            hDiffIntent.putExtra("hDiff", hoehendifferenz);
+            hDiffIntent.setAction("hDiffFilter");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(hDiffIntent);
         }
 
     };
