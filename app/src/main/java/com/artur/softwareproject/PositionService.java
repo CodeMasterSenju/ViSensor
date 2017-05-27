@@ -40,7 +40,7 @@ public class PositionService extends Service {
             gps = (double[])intent.getExtras().get("gpsRawData");
 
             //Berechne karthesische Koordinaten.
-            gpsDistanz[0] = (gps[0] - ursprung[0]) * mProBreitengrad * Math.cos(gps[1]);
+            gpsDistanz[0] = (gps[0] - ursprung[0]) * mProBreitengrad * Math.cos(gps[1]*2*Math.PI / 360);
             gpsDistanz[1] = (gps[1] - ursprung[1]) * mProBreitengrad;
             gpsDistanz[2] = gps[2];
 
