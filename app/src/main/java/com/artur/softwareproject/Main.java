@@ -2,6 +2,7 @@ package com.artur.softwareproject;
 
 /**
  * Created by artur_000 on 01.05.2017.
+ * Zeigt Sensordaten in Echtzeit an.
  */
 
 import android.bluetooth.BluetoothAdapter;
@@ -11,26 +12,37 @@ import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.BaseAdapter;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
+
+
 public class Main extends AppCompatActivity {
 
-    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit"};
-    static public String [] datenEinheit = {"°C", "%", "lx"};
+    private static final String TAG = Main.class.getSimpleName();
+
+    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit","GPS x", "GPS y", "Baro z"};
+    static public String [] datenEinheit = {"°C", "%", "lx", "m", "m", "m"};
     private ListView sensorDataList;
-    private ListAdapter adapter;
+    private SensorDataListAdapter adapter;
     private BluetoothAdapter bluetoothAdapter;
     private final int REQUEST_ENABLE_BT = 1;
     private Intent serviceIntent;
+    private Intent posServiceIntent;
+    private Intent recordServiceIntent;
 
-    Handler handler = new Handler();
+    private boolean record = false;
+
+    Handler updateHandler = new Handler();
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,31 +60,37 @@ public class Main extends AppCompatActivity {
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION);
+        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
         if(permissionCheck != PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
         }
+
+        posServiceIntent = new Intent(this, PositionService.class);
+        startService(posServiceIntent);
+
+        recordServiceIntent = new Intent(this, RecordService.class);
+
     }
 
     Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
             ((BaseAdapter)adapter).notifyDataSetChanged();
-            handler.postDelayed(this, 1000); //run every second
+            updateHandler.postDelayed(this, 1000); //run every second
         }
     };
 
     @Override
     protected void onResume() {
-        handler.postDelayed(timerRunnable, 500);
+        updateHandler.postDelayed(timerRunnable, 500);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        handler.removeCallbacks(timerRunnable);
+        updateHandler.removeCallbacks(timerRunnable);
         super.onPause();
     }
 
@@ -80,6 +98,7 @@ public class Main extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         stopService(serviceIntent);
+        stopService(posServiceIntent);
     }
 
     @Override
@@ -114,4 +133,25 @@ public class Main extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+
+    public void record(View view) {
+
+        Intent resetIntent = new Intent();
+        resetIntent.putExtra("reset", "");
+        resetIntent.setAction("resetFilter");
+        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
+
+        if (!record) {
+            record = true;
+            startService(recordServiceIntent);
+
+        } else {
+            record = false;
+            stopService(recordServiceIntent);
+        }
+    }
+
 }
+
+//EOF

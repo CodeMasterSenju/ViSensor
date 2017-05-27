@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">SoftwareProject</string>
+    <string name="app_name">ViSensor</string>
+    <string name="recordButton">Aufnahme</string>
 </resources>

@@ -6,13 +6,13 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEDGED"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+
 
     <permission android:name="android.permission.BLUETOOTH" android:label="BLUETOOTH" />
     <permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <permission android:name="android.permission.BLUETOOTH_PRIVILEDGED"/>
-    <permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
@@ -28,10 +28,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".BluetoothConnectionList"></activity>
-        <activity android:name=".VRmenu"></activity>
-        <activity android:name=".Help"></activity>
-        <service android:enabled="true" android:name=".BluetoothService"></service>
+        <activity android:name=".BluetoothConnectionList"/>
+        <activity android:name=".VRmenu"/>
+        <activity android:name=".Help"/>
+        <service android:enabled="true" android:name=".BluetoothService"/>
+        <service android:name="GpsService"/>
+        <service android:name=".BaroService"/>
+        <service android:name="PositionService"/>
+        <service android:name="RecordService"/>
     </application>
 
 </manifest>
