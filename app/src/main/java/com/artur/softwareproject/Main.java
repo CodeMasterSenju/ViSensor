@@ -9,14 +9,12 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.Environment;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,12 +22,6 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 
 
 public class Main extends AppCompatActivity {
@@ -44,15 +36,12 @@ public class Main extends AppCompatActivity {
     private final int REQUEST_ENABLE_BT = 1;
     private Intent serviceIntent;
     private Intent posServiceIntent;
+    private Intent recordServiceIntent;
 
     private boolean record = false;
-    private boolean firstWrite = true;
-    private String fileName;
 
     Handler updateHandler = new Handler();
-    Handler recordHandler = new Handler();
 
-    private File jsonFile;
 
 
     @Override
@@ -81,6 +70,8 @@ public class Main extends AppCompatActivity {
         posServiceIntent = new Intent(this, PositionService.class);
         startService(posServiceIntent);
 
+        recordServiceIntent = new Intent(this, RecordService.class);
+
     }
 
     Runnable timerRunnable = new Runnable() {
@@ -94,14 +85,12 @@ public class Main extends AppCompatActivity {
     @Override
     protected void onResume() {
         updateHandler.postDelayed(timerRunnable, 500);
-        recordHandler.postDelayed(jsonDocWriter, 500);
         super.onResume();
     }
 
     @Override
     protected void onPause() {
         updateHandler.removeCallbacks(timerRunnable);
-        recordHandler.removeCallbacks(jsonDocWriter);
         super.onPause();
     }
 
@@ -146,106 +135,23 @@ public class Main extends AppCompatActivity {
     }
 
 
-
-
     public void record(View view) {
 
-        firstWrite = true;
         Intent resetIntent = new Intent();
         resetIntent.putExtra("reset", "");
         resetIntent.setAction("resetFilter");
         LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
 
-        if (record) {
-            record = false;
-
-            try {
-                Log.d(TAG, "trying to finish file");
-                BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-                writer.write("\n]}");
-                writer.close();
-            } catch (IOException e) {
-                Log.d(TAG, "writing failed");
-                e.printStackTrace();
-            }
-        } else {
+        if (!record) {
             record = true;
+            startService(recordServiceIntent);
 
-            fileName = now() + ".json";
-
-            jsonFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
-
-            try {
-                jsonFile.createNewFile();
-                BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-                writer.write("{\"session\": [\n");
-                writer.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        } else {
+            record = false;
+            stopService(recordServiceIntent);
         }
-
-
     }
-
-    Runnable jsonDocWriter = new Runnable() {
-        @Override
-        public void run() {
-            if (record) {
-                String string = dataToJson();
-                if (string == "" || string == null)
-                    string = "Nya";
-
-                try {
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-                    Log.d(TAG, "writing to JSON-file.");
-                    if (firstWrite) {
-                        writer.write(string);
-                        firstWrite = false;
-                    } else {
-                        writer.write(",\n" + string);
-                    }
-
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            recordHandler.postDelayed(this, 1000); //run every second
-        }
-    };
-
-    private String dataToJson() {
-        SensorDataListAdapter.JsonData data = adapter.getJson();
-
-        String ret =    "  {\n"
-                        + "    \"time\": " + now() + ",\n"
-                        + "    \"temperature\": " + Double.toString(data.temperature) + ",\n"
-                        + "    \"humidity\": " + Double.toString(data.humidity) + ",\n"
-                        + "    \"illuminance\": " + Double.toString(data.illuminance) + ",\n"
-                        + "    \"xPos\": " + Double.toString(data.xPos) + ",\n"
-                        + "    \"yPos\": " + Double.toString(data.yPos) + ",\n"
-                        + "    \"zPos\": " + Double.toString(data.zPos) + "\n"
-                        + "  }";
-
-        return ret;
-    }
-
-    //Gibt die aktuelle Zeit als String aus
-    private String now() {
-        GregorianCalendar now = new GregorianCalendar();
-        String ret;
-
-        ret = ""   + now.get(Calendar.YEAR)
-                + "-" + now.get(Calendar.MONTH)
-                + "-" + now.get(Calendar.DAY_OF_MONTH)
-                + "-" + now.get(Calendar.HOUR)
-                + "-" + now.get(Calendar.MINUTE)
-                + "-" + now.get(Calendar.SECOND);
-
-        return ret;
-    }
-
 
 }
+
+//EOF

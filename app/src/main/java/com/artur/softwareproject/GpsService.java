@@ -72,3 +72,5 @@ public class GpsService extends Service implements LocationListener {
         gpsManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
     }
 }
+
+//EOF
