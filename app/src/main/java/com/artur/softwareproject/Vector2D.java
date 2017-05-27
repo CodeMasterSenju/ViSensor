@@ -106,8 +106,8 @@ public class Vector2D implements Comparable<Vector2D>
     @Override
     public int compareTo(@NonNull Vector2D o)
     {
-        if(this.degree > o.getDegree())return 1;
-        else if(this.degree < o.getDegree()) return -1;
+        if(this.degree > o.getDegree())return -1;
+        else if(this.degree < o.getDegree()) return 1;
         else return 0;
     }
 }

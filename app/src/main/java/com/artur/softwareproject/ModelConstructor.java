@@ -405,4 +405,199 @@ public class ModelConstructor
         v.clear();
         v.addAll(Arrays.asList(vec));
     }
+
+    private String generateString(Vector2D[] surroundingPoints)
+    {
+        ArrayList<Vector3D> vectors = new ArrayList<>();
+        ArrayList<int[]> planes = new ArrayList<>();
+
+        Vector2D avg = getAverage(surroundingPoints);
+
+        for (int i = 0; i < surroundingPoints.length; i++)
+        {
+            int j = i+1;
+            if(j==surroundingPoints.length)
+                j=0;
+
+            buildPartFloorAndFence(vectors,planes,surroundingPoints[i],surroundingPoints[j],avg);
+        }
+
+        buildFloor(vectors,planes,surroundingPoints);
+
+        Vector3D[] va = new Vector3D[vectors.size()];
+        int[][] pa = new int[planes.size()][];
+        return makeString(va,pa);
+
+    }
+
+    private void buildPartFloorAndFence(ArrayList<Vector3D> vectors, ArrayList<int[]> planes, Vector2D v1, Vector2D v2, Vector2D avg)
+    {
+        Vector2D n1 = avg.sub(v1).normalize();
+        Vector2D nn1 = n1.getNormalVector();
+        if (v2.sub(v1).dotProduct(nn1) < 0)
+        {
+            nn1 = nn1.scale(-1.0);
+        }
+        Vector2D n2 = avg.sub(v2).normalize();
+
+        buildFencePost(vectors,planes,v1,n1,nn1);
+        buildFenceBoards(vectors,planes,v1,n1,v2,n2);
+    }
+
+    private void buildFencePost(ArrayList<Vector3D> vectors, ArrayList<int[]> planes, Vector2D v1, Vector2D n1, Vector2D nn1)
+    {
+        double postWidth = 0.1;
+        double postHeight = 1.0;
+
+        vectors.add(new Vector3D(v1.add((n1.add(nn1).normalize().scale(postWidth/2.0))),0));
+        vectors.add(new Vector3D(v1.sub((n1.sub(nn1).normalize().scale(postWidth/2.0))),0));
+        vectors.add(new Vector3D(v1.sub((n1.add(nn1).normalize().scale(postWidth/2.0))),0));
+        vectors.add(new Vector3D(v1.add((n1.sub(nn1).normalize().scale(postWidth/2.0))),0));
+
+        vectors.add(new Vector3D(v1.add((n1.add(nn1).normalize().scale(postWidth/2.0))),postHeight));
+        vectors.add(new Vector3D(v1.sub((n1.sub(nn1).normalize().scale(postWidth/2.0))),postHeight));
+        vectors.add(new Vector3D(v1.sub((n1.add(nn1).normalize().scale(postWidth/2.0))),postHeight));
+        vectors.add(new Vector3D(v1.add((n1.sub(nn1).normalize().scale(postWidth/2.0))),postHeight));
+
+        int s = vectors.size()-1;
+        int[] i;
+
+        i = new int[]{s-3,s-2,s-1,s-0};
+        planes.add(i);
+
+        i = new int[]{s-4,s-5,s-6,s-7};
+        planes.add(i);
+
+        i = new int[]{s-7,s-4,s-0,s-3};
+        planes.add(i);
+
+        i = new int[]{s-4,s-5,s-1,s-0};
+        planes.add(i);
+
+        i = new int[]{s-5,s-6,s-2,s-1};
+        planes.add(i);
+
+        i = new int[]{s-6,s-7,s-3,s-2};
+        planes.add(i);
+    }
+
+    private void buildFenceBoards(ArrayList<Vector3D> vectors, ArrayList<int[]> planes, Vector2D v1, Vector2D n1, Vector2D v2, Vector2D n2)
+    {
+        double boardSize = 0.3;
+        double boardwidth = 0.05;
+        double boardHeight1 = 0.3;
+        double boardHeight2 = 0.65;
+
+        //build board nr 1
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(boardwidth/2)),boardHeight1));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(boardwidth/2)),boardHeight1));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(-1 * boardwidth/2)),boardHeight1));
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(-1 * boardwidth/2)),boardHeight1));
+
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(boardwidth/2)),boardHeight1 + boardSize));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(boardwidth/2)),boardHeight1 + boardSize));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(-1 * boardwidth/2)),boardHeight1 + boardSize));
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(-1 * boardwidth/2)),boardHeight1 + boardSize));
+
+        int s = vectors.size()-1;
+        int[] i;
+
+        i = new int[]{s-3,s-2,s-1,s-0};
+        planes.add(i);
+
+        i = new int[]{s-4,s-5,s-6,s-7};
+        planes.add(i);
+
+        i = new int[]{s-7,s-4,s-0,s-3};
+        planes.add(i);
+
+        i = new int[]{s-4,s-5,s-1,s-0};
+        planes.add(i);
+
+        i = new int[]{s-5,s-6,s-2,s-1};
+        planes.add(i);
+
+        i = new int[]{s-6,s-7,s-3,s-2};
+        planes.add(i);
+
+
+        //build board nr 2
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(boardwidth/2)),boardHeight2));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(boardwidth/2)),boardHeight2));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(-1 * boardwidth/2)),boardHeight2));
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(-1 * boardwidth/2)),boardHeight2));
+
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(boardwidth/2)),boardHeight2 + boardSize));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(boardwidth/2)),boardHeight2 + boardSize));
+        vectors.add(new Vector3D(v2.add(n2.normalize().scale(-1 * boardwidth/2)),boardHeight2 + boardSize));
+        vectors.add(new Vector3D(v1.add(n1.normalize().scale(-1 * boardwidth/2)),boardHeight2 + boardSize));
+
+        s = vectors.size()-1;
+
+        i = new int[]{s-3,s-2,s-1,s-0};
+        planes.add(i);
+
+        i = new int[]{s-4,s-5,s-6,s-7};
+        planes.add(i);
+
+        i = new int[]{s-7,s-4,s-0,s-3};
+        planes.add(i);
+
+        i = new int[]{s-4,s-5,s-1,s-0};
+        planes.add(i);
+
+        i = new int[]{s-5,s-6,s-2,s-1};
+        planes.add(i);
+
+        i = new int[]{s-6,s-7,s-3,s-2};
+        planes.add(i);
+    }
+
+    public void buildFloor(ArrayList<Vector3D> vectors, ArrayList<int[]> planes, Vector2D[] surrouningPoints)
+    {
+        for (int i = 0; i < surrouningPoints.length; i++)
+        {
+            vectors.add(new Vector3D(surrouningPoints[i],0));
+        }
+
+        int[] p = new int[surrouningPoints.length];
+
+        for (int i = 0; i < surrouningPoints.length; i++)
+        {
+            p[i] = vectors.size()-(surrouningPoints.length-i);
+        }
+
+        planes.add(p);
+    }
+
+    private String makeString(Vector3D[] vectors, int[][] planes)
+    {
+        String s = "";
+
+        Vector3D v;
+
+        for (int i = 0; i < vectors.length; i++)
+        {
+            v = vectors[i];
+            String ts = "v " + v.x + " " + v.y + " " + v.z +" \n";
+            s = s + ts;
+        }
+
+        int[] p;
+
+        for (int i = 0; i < planes.length; i++)
+        {
+            p = planes[i];
+            String ts = "v ";
+
+            for (int j = 0; j < p.length; j++)
+            {
+                ts = ts + p[j] + " ";
+            }
+            ts = ts + "\n";
+            s = s + ts;
+        }
+
+        return s;
+    }
 }
