@@ -6,28 +6,25 @@
     tools:context=".Main">
 
     <item
+        android:id="@+id/disconnect"
+        android:orderInCategory="2"
+        android:title="Disconnect"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_action_cancel"/>
+
+    <item
         android:id="@+id/record_data"
-        android:orderInCategory="100"
+        android:orderInCategory="1"
         android:title="Menu"
         app:showAsAction="always"
-        android:icon="@drawable/ic_action_video">
+        android:icon="@drawable/ic_action_save">
     </item>
 
     <item
-        android:id="@+id/menu"
-        android:orderInCategory="100"
+        android:id="@+id/vr_menu"
+        android:orderInCategory="0"
         android:title="Menu"
         app:showAsAction="always"
-        android:icon="@drawable/ic_action_overflow">
-
-        <menu>
-            <item
-                android:id="@+id/menu_geräte"
-                android:title="Bluetooth Geräte"/>
-
-            <item
-                android:id="@+id/menu_hilfe"
-                android:title="Hilfe" />
-        </menu>
+        android:icon="@drawable/ic_visibility">
     </item>
 </menu>

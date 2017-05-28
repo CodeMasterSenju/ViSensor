@@ -11,13 +11,8 @@ import android.bluetooth.BluetoothProfile;
 import android.content.*;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
-import android.widget.Toast;
 
-import java.util.List;
 import java.util.UUID;
-
-import static android.content.ContentValues.TAG;
 import static java.util.UUID.fromString;
 
 /**
@@ -87,11 +82,15 @@ public class BluetoothService extends Service{
 
                     if(newState == BluetoothProfile.STATE_CONNECTING)
                     {
-                        serviceIntent.putExtra("bConnecting", 1);
+
                     }
                     else if(newState == BluetoothProfile.STATE_CONNECTED)
                     {
-                        serviceIntent.putExtra("bConnected", 0);
+                        Intent mainIntent = new Intent();
+                        mainIntent.putExtra("connected", 1);
+                        mainIntent.setAction("connectedFilter");
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+
                         mBluetoothGatt.discoverServices();
                     }
                     else if(newState == BluetoothProfile.STATE_DISCONNECTING)
@@ -100,7 +99,10 @@ public class BluetoothService extends Service{
                     }
                     else if(newState == BluetoothProfile.STATE_DISCONNECTED)
                     {
-                        serviceIntent.putExtra("bDisconnected", 1);
+                        Intent mainIntent = new Intent();
+                        mainIntent.putExtra("disconnect", 1);
+                        mainIntent.setAction("disconnectFilter");
+                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
                     }
                 }
 
@@ -164,7 +166,6 @@ public class BluetoothService extends Service{
                         gatt.setCharacteristicNotification(tempData, true);
                         mBluetoothGatt.readCharacteristic(tempData);
                     }
-
                 }
 
                 @Override

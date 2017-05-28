@@ -5,80 +5,82 @@ package com.artur.softwareproject;
  * Zeigt Sensordaten in Echtzeit an.
  */
 
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
 import android.os.Handler;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
+import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import static android.os.SystemClock.sleep;
 
 
 public class Main extends AppCompatActivity {
 
     private static final String TAG = Main.class.getSimpleName();
 
-    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit","GPS x", "GPS y", "Baro z"};
-    static public String [] datenEinheit = {"°C", "%", "lx", "m", "m", "m"};
+    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit","Position"};
+    static public String [] datenEinheit = {"°C", "%", "lux", "m"};
     private ListView sensorDataList;
+    private TextView recordClock;
     private SensorDataListAdapter adapter;
     private BluetoothAdapter bluetoothAdapter;
-    private final int REQUEST_ENABLE_BT = 1;
     private Intent serviceIntent;
     private Intent posServiceIntent;
     private Intent recordServiceIntent;
-
     private boolean record = false;
-
+    private long currentTime;
+    private int disconnect;
+    private Thread disconnectThread;
     Handler updateHandler = new Handler();
-
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getSupportActionBar().setDisplayShowTitleEnabled(false); /* Gets rid of the action bar title. */
         setContentView(R.layout.activity_main);
 
+        recordClock = (TextView) findViewById(R.id.recordClock);
         sensorDataList = (ListView) findViewById(R.id.dataList);
         adapter = new SensorDataListAdapter(this, datenTypen, datenEinheit);
         sensorDataList.setAdapter(adapter);
+        disconnect = 0;
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(disconnectReceive, new IntentFilter("disconnectFilter"));
+
         serviceIntent = new Intent(this, BluetoothService.class);
-
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-        }
-
-        int permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-
-        if(permissionCheck != PackageManager.PERMISSION_GRANTED)
-        {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
-        }
 
         posServiceIntent = new Intent(this, PositionService.class);
         startService(posServiceIntent);
 
         recordServiceIntent = new Intent(this, RecordService.class);
-
     }
 
     Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
             ((BaseAdapter)adapter).notifyDataSetChanged();
-            updateHandler.postDelayed(this, 1000); //run every second
+
+            long millis = System.currentTimeMillis() - currentTime;
+            int seconds = (int) (millis / 1000);
+            int minutes = seconds / 60;
+            seconds = seconds % 60;
+            recordClock.setText(String.format("Recorded time : " + "%02d:%02d", minutes, seconds));
+            updateHandler.postDelayed(this, 500); //run every half a second
         }
     };
 
@@ -107,51 +109,98 @@ public class Main extends AppCompatActivity {
         return true;
     }
 
+    public int getDisconnect()
+    {
+        return disconnect;
+    }
+
+    private BroadcastReceiver disconnectReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            disconnect = (int)intent.getExtras().get("disconnect");
+        }
+    };
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.menu_geräte:
-                Intent bluetoothIntent = new Intent(Main.this, BluetoothConnectionList.class);
-                Main.this.startActivity(bluetoothIntent);
-                return true;
+            case R.id.disconnect:
+                stopService(serviceIntent);
 
-            case R.id.menu_hilfe:
-                Intent helpIntent = new Intent(Main.this, Help.class);
-                Main.this.startActivity(helpIntent);
+                final ProgressDialog disconnectingDialog = new ProgressDialog(Main.this);
+                disconnectingDialog.setMessage("Disconnecting...");
+                disconnectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                disconnectingDialog.show();
+
+                final Handler disconnectHandler = new Handler(){
+                    @Override
+                    public void handleMessage(Message msg) {
+                        disconnectingDialog.dismiss();
+                        disconnectThread.interrupt();
+                        Intent bluetoothIntent = new Intent(Main.this, BluetoothConnectionList.class);
+                        Main.this.startActivity(bluetoothIntent);
+                        Main.this.finish();
+                    }
+                };
+
+                disconnectThread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        int stop = 0;
+                        while(stop == 0) {
+                            stop = getDisconnect();
+                            sleep(1500);
+                        }
+                        disconnectHandler.sendEmptyMessage(0);
+                    }
+                });
+                disconnectThread.start();
+
                 return true;
 
             case R.id.record_data:
+                Intent resetIntent = new Intent();
+                resetIntent.putExtra("reset", "");
+                resetIntent.setAction("resetFilter");
+                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
 
-                Context context = getApplicationContext();
-                CharSequence text = "Recording data";
-                int duration = Toast.LENGTH_SHORT;
-                Toast toast = Toast.makeText(context, text, duration);
-                toast.show();
+                if (!record) {
+                    item.setIcon(R.drawable.ic_action_stop);
+                    Toast.makeText(getApplicationContext(), "Start recording data", Toast.LENGTH_LONG).show();
+                    recordClock.setVisibility(View.VISIBLE);
+
+                    Animation a = AnimationUtils.loadAnimation(this, R.anim.textslide);
+                    TextView tv = (TextView) findViewById(R.id.recordClock);
+                    tv.startAnimation(a);
+
+                    currentTime = System.currentTimeMillis();
+                    record = true;
+                    startService(recordServiceIntent);
+
+                } else {
+                    item.setIcon(R.drawable.ic_action_save);
+                    Toast.makeText(getApplicationContext(), "Stop recording data", Toast.LENGTH_LONG).show();
+
+                    Animation a = AnimationUtils.loadAnimation(this, R.anim.textupslide);
+                    TextView tv = (TextView) findViewById(R.id.recordClock);
+                    tv.startAnimation(a);
+
+                    recordClock.setVisibility(View.GONE);
+                    record = false;
+                    stopService(recordServiceIntent);
+                }
+
+                return true;
+
+            case R.id.vr_menu:
+                Intent vrIntent = new Intent(Main.this, VRmenu.class);
+                Main.this.startActivity(vrIntent);
+                Main.this.finish();
+
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
-
-
-    public void record(View view) {
-
-        Intent resetIntent = new Intent();
-        resetIntent.putExtra("reset", "");
-        resetIntent.setAction("resetFilter");
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
-
-        if (!record) {
-            record = true;
-            startService(recordServiceIntent);
-
-        } else {
-            record = false;
-            stopService(recordServiceIntent);
-        }
-    }
-
 }
-
-//EOF
