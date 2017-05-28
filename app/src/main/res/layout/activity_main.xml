@@ -12,16 +12,6 @@
         android:id="@+id/dataList" />
 
     <!--Vorläufiger Record-Button-->
-    <Button
-        android:id="@+id/recButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="32dp"
-        android:hint="@string/recordButton"
-        android:onClick="record"
-        android:text="@string/recordButton" />
 
 
 </RelativeLayout>

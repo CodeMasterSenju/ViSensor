@@ -24,12 +24,13 @@ public class PositionService extends Service {
     private double[] ursprung = {0,0,0}; // Wird genutzt um sich die Ursprungsposition zu merken
     private double[] gpsDistanz = {0,0,0}; //Aktuelle Position in karthesischen Koordinaten in m
     private final double mProBreitengrad = 111133; //Abstand zwischen zwei Breitengraden in Metern.
+    private boolean gpsInit = false;
 
     private double startDruck = 0; //Wird genutzt um sich den Druck zum Messbeginn zu merken
     private double druck = 0; //Aktueller Luftdruck
     private double hoehendifferenz = 0;
     private final double mProPascal = 0.11; //Pro Pascal ca. 11cm Höhenunterschied.
-
+    private boolean baroInit = false;
 
     //Formalitäten
     private Intent gpsIntent, baroIntent;
@@ -38,6 +39,13 @@ public class PositionService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
             gps = (double[])intent.getExtras().get("gpsRawData");
+
+            if (!gpsInit) {
+                ursprung[0] = gps[0];
+                ursprung[1] = gps[1];
+                ursprung[2] = gps[2];
+                gpsInit = true;
+            }
 
             //Berechne karthesische Koordinaten.
             gpsDistanz[0] = (gps[0] - ursprung[0]) * mProBreitengrad * Math.cos(gps[1]*2*Math.PI / 360);
@@ -54,6 +62,13 @@ public class PositionService extends Service {
     private BroadcastReceiver baroReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            druck = (double)intent.getExtras().get("baroRawData");
+
+            if (!baroInit) {
+                startDruck = druck;
+                baroInit = true;
+            }
+
             hoehendifferenz = (startDruck - druck)* 100 * mProPascal;
 
             Intent hDiffIntent = new Intent();

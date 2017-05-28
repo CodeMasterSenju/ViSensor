@@ -42,10 +42,10 @@ public class BaroService extends Service implements SensorEventListener {
 
             baro = event.values[0];
 
-            Intent gpsIntent = new Intent();
-            gpsIntent.putExtra("baroRawData", baro);
-            gpsIntent.setAction("baroFilter");
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(gpsIntent);
+            Intent baroIntent = new Intent();
+            baroIntent.putExtra("baroRawData", baro);
+            baroIntent.setAction("baroFilter");
+            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(baroIntent);
         }
     }
 

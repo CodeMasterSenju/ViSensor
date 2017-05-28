@@ -17,7 +17,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -123,6 +122,7 @@ public class Main extends AppCompatActivity {
             case R.id.record_data:
 
                 Context context = getApplicationContext();
+                record();
                 CharSequence text = "Recording data";
                 int duration = Toast.LENGTH_SHORT;
                 Toast toast = Toast.makeText(context, text, duration);
@@ -135,7 +135,7 @@ public class Main extends AppCompatActivity {
     }
 
 
-    public void record(View view) {
+    public void record() {
 
         Intent resetIntent = new Intent();
         resetIntent.putExtra("reset", "");

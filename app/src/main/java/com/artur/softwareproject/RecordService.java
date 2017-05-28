@@ -138,7 +138,7 @@ public class RecordService extends Service implements Runnable{
         GregorianCalendar now = new GregorianCalendar();
         String ret;
 
-        String m = "" + now.get(GregorianCalendar.MONTH);
+        String m = "" + (now.get(GregorianCalendar.MONTH)+1); //Monate beginnen bei 0
         String d = "" +  now.get(GregorianCalendar.DAY_OF_MONTH);
         String h = "" +  now.get(GregorianCalendar.HOUR);
         String min = "" +  now.get(GregorianCalendar.MINUTE);
