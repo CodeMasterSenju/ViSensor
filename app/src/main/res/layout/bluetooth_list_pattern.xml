@@ -1,45 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent"
+    android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
         android:orientation="vertical">
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="8dp"
-            android:layout_marginTop="5dp"
-            android:textSize="25dp"
-            android:text="SensorTag"
             android:id="@+id/bluetooth_connection_name"
-            android:textColor="@android:color/black" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:text="SensorTag"
+            android:textAlignment="center"
+            android:textColor="@android:color/black"
+            android:textSize="25dp"
+            android:typeface="monospace" />
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/bluetooth_connection_status"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="10dp"
-            android:layout_marginBottom="5dp"
-            android:textSize="15dp"
             android:text="Nicht Verbunden"
+            android:textAlignment="center"
             android:textColor="@android:color/black"
-            android:id="@+id/bluetooth_connection_status" />
+            android:textSize="18dp" />
 
     </LinearLayout>
-
-    <View
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
-
-    <ImageView
-        android:layout_width="40dp"
-        android:layout_height="50dp"
-        android:id="@+id/bluetooth_connected_image"/>
-
 </LinearLayout>
 
