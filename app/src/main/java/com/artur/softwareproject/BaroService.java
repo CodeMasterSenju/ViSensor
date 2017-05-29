@@ -14,6 +14,7 @@ import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 public class BaroService extends Service implements SensorEventListener {
     private static final String TAG = BaroService.class.getSimpleName();
@@ -21,6 +22,8 @@ public class BaroService extends Service implements SensorEventListener {
     private boolean baroStatus;
     //Luftdruck
     private double baro;
+    //Filter
+    private SimpleKalmanFilter filter;
 
     //Formalitäten
     private SensorManager baroManager;
@@ -40,7 +43,7 @@ public class BaroService extends Service implements SensorEventListener {
     public void  onSensorChanged(SensorEvent event) {
         if (event.values.length > 0) {
 
-            baro = event.values[0];
+            baro = filter.output(event.values[0]);
 
             Intent baroIntent = new Intent();
             baroIntent.putExtra("baroRawData", baro);
@@ -59,6 +62,8 @@ public class BaroService extends Service implements SensorEventListener {
         baroManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         baroSensor = baroManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
         baroManager.registerListener(this, baroSensor, SensorManager.SENSOR_DELAY_FASTEST);
+        filter = new SimpleKalmanFilter(0.013, 0.0000005);
+
     }
 }
 

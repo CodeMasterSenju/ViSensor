@@ -69,7 +69,7 @@ public class PositionService extends Service {
                 baroInit = true;
             }
 
-            hoehendifferenz = (startDruck - druck)* 100 * mProPascal;
+            hoehendifferenz = (startDruck - druck) * 100 * mProPascal;
 
             Intent hDiffIntent = new Intent();
             hDiffIntent.putExtra("hDiff", hoehendifferenz);
