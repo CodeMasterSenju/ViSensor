@@ -8,6 +8,7 @@ package com.artur.softwareproject;
 public class Mittelwertfilter {
     private double[] buffer;
     private int buffSize, buffPos;
+    private boolean first = true;
 
     public Mittelwertfilter(int buffSize) {
         buffer = new double[buffSize];
@@ -20,7 +21,14 @@ public class Mittelwertfilter {
     }
 
     public double output(double input) {
-        buffer[buffPos] = input;
+
+        if (first) {
+            for (int i = 0; i < buffSize; i++) {
+                buffer[i] = input;
+            }
+        } else
+            buffer[buffPos] = input;
+
         buffPos++;
         if (buffPos >= buffSize) {
             buffPos = 0;

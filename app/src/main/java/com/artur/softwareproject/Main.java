@@ -18,9 +18,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+
 import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -168,6 +170,7 @@ public class Main extends AppCompatActivity {
                     item.setIcon(R.drawable.ic_action_stop);
                     Toast.makeText(getApplicationContext(), "Start recording data", Toast.LENGTH_LONG).show();
                     recordClock.setVisibility(View.VISIBLE);
+
 
                     Animation a = AnimationUtils.loadAnimation(this, R.anim.textslide);
                     TextView tv = (TextView) findViewById(R.id.recordClock);
