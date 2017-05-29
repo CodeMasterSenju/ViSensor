@@ -44,7 +44,6 @@ public class RecordService extends Service implements Runnable{
     private Thread recordThread;
 
 
-
     @Override
     public IBinder onBind(Intent intent) {
         return null;
@@ -52,8 +51,6 @@ public class RecordService extends Service implements Runnable{
 
     @Override
     public void onCreate() {
-        Log.d(TAG, "Service created.");
-
         super.onCreate();
         LocalBroadcastManager.getInstance(this).registerReceiver(temperatureReceive, new IntentFilter("temperatureFilter"));
         LocalBroadcastManager.getInstance(this).registerReceiver(humidityReceive, new IntentFilter("humidityFilter"));
@@ -75,7 +72,6 @@ public class RecordService extends Service implements Runnable{
             jsonFile.createNewFile();
             BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
             writer.write("{\"session\": [\n");
-            Log.d(TAG, "Erste Zeile geschrieben.");
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -88,10 +84,7 @@ public class RecordService extends Service implements Runnable{
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         record = false;
-
-        Log.d(TAG, "Service wird zerstört.");
 
     }
 
@@ -99,7 +92,6 @@ public class RecordService extends Service implements Runnable{
         @Override
         public void onReceive(Context context, Intent intent) {
             temperature = (double)intent.getExtras().get("ambientTemperature");
-
         }
     };
 
@@ -180,12 +172,10 @@ public class RecordService extends Service implements Runnable{
         return ret;
     }
 
-
     @Override
     public void run() {
 
         if (record) {
-            Log.d(TAG, "run() funktioniert.");
             String string = dataToJson();
 
             try {
@@ -202,7 +192,6 @@ public class RecordService extends Service implements Runnable{
                 e.printStackTrace();
             }
         } else {
-            Log.d(TAG, "run() sollte enden.");
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
                 writer.write("\n]}");
@@ -215,5 +204,3 @@ public class RecordService extends Service implements Runnable{
         recordHandler.postDelayed(this, 1000); //run every second
     }
 }
-
-//EOF

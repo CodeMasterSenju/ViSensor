@@ -3,15 +3,30 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/holo_blue_bright">
 
-    <ListView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentStart="true"
-        android:id="@+id/dataList" />
 
-    <!--Vorläufiger Record-Button-->
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
+        <TextView
+            android:id="@+id/recordClock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp"
+            android:background="@android:color/background_light"
+            android:textAlignment="center"
+            android:typeface="monospace"
+            android:textSize="25dp"
+            android:visibility="gone" />
 
+        <ListView
+            android:id="@+id/dataList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true" />
+    </LinearLayout>
 </RelativeLayout>

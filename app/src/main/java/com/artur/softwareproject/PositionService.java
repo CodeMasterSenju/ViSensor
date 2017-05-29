@@ -30,7 +30,9 @@ public class PositionService extends Service {
     private double druck = 0; //Aktueller Luftdruck
     private double hoehendifferenz = 0;
     private final double mProPascal = 0.11; //Pro Pascal ca. 11cm Höhenunterschied.
+
     private boolean baroInit = false;
+
 
     //Formalitäten
     private Intent gpsIntent, baroIntent;
@@ -62,6 +64,7 @@ public class PositionService extends Service {
     private BroadcastReceiver baroReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+
             druck = (double)intent.getExtras().get("baroRawData");
 
             if (!baroInit) {
@@ -70,6 +73,7 @@ public class PositionService extends Service {
             }
 
             hoehendifferenz = (startDruck - druck) * 100 * mProPascal;
+
 
             Intent hDiffIntent = new Intent();
             hDiffIntent.putExtra("hDiff", hoehendifferenz);

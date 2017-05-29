@@ -7,21 +7,16 @@ package com.artur.softwareproject;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
-import java.math.*;
 
 public class SensorDataListAdapter extends ArrayAdapter {
 
@@ -62,7 +57,6 @@ public class SensorDataListAdapter extends ArrayAdapter {
         LocalBroadcastManager.getInstance(context).registerReceiver(opticalReceive, new IntentFilter("lightFilter"));
         LocalBroadcastManager.getInstance(context).registerReceiver(gpsReceive, new IntentFilter("gpsDistFilter"));
         LocalBroadcastManager.getInstance(context).registerReceiver(baroReceive, new IntentFilter("hDiffFilter"));
-
     }
 
     private BroadcastReceiver temperatureReceive = new BroadcastReceiver() {
@@ -109,11 +103,7 @@ public class SensorDataListAdapter extends ArrayAdapter {
         View customView = ListInflater.inflate(R.layout.sensordata_list_pattern, parent, false);
 
         dataItemName = (TextView) customView.findViewById(R.id.dataItemName);
-        dataItemName.setText(datenTypen[position]);
-
         dataItemType = (TextView) customView.findViewById(R.id.dataItemType);
-        dataItemType.setText(datenEinheit[position]);
-
         dataItemValue = (TextView) customView.findViewById(R.id.dataItemValue);
 
         dataValues[0] = Math.floor(temperature * 100) / 100;
@@ -123,15 +113,23 @@ public class SensorDataListAdapter extends ArrayAdapter {
         dataValues[4] = Math.floor(yPos * 100) / 100;
         dataValues[5] = Math.floor(zPos * 100) / 100;
 
-        dataItemValue.setText(Double.toString(dataValues[position]));
+        if(position == 0 || position == 1 || position == 2)
+        {
+            dataItemName.setText(datenTypen[position]);
+            dataItemType.setText(datenEinheit[position]);
+            dataItemValue.setText(Double.toString(dataValues[position]));
+        } else if(position == 3) {
+            dataItemName.setText(datenTypen[3]);
 
+            dataItemValue.setText("X : " + Double.toString(dataValues[3]) + " " + datenEinheit[3] + "\n" +
+                                  "Y : " + Double.toString(dataValues[4]) + " " + datenEinheit[3] + "\n" +
+                                  "Z : " + Double.toString(dataValues[5]) + " " + datenEinheit[3]);
+        }
 
         customView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //What happens if you press on the list items at the main activity.
-                Intent vrIntent = new Intent(v.getContext(), VRmenu.class);
-                v.getContext().startActivity(vrIntent);
             }
         });
 
@@ -139,5 +137,3 @@ public class SensorDataListAdapter extends ArrayAdapter {
     }
 
 }
-
-//EOF
