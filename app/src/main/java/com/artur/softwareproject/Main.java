@@ -195,7 +195,6 @@ public class Main extends AppCompatActivity {
             case R.id.vr_menu:
                 Intent vrIntent = new Intent(Main.this, VRmenu.class);
                 Main.this.startActivity(vrIntent);
-                Main.this.finish();
 
                 return true;
 
