@@ -41,6 +41,7 @@ public class RecordService extends Service implements Runnable{
 
 
     private String fileName;
+    private final String path = "/ViSensor/JSON";
     private Thread recordThread;
 
 
@@ -66,7 +67,13 @@ public class RecordService extends Service implements Runnable{
 
         fileName = now() + ".json";
 
-        jsonFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+        File pathname = new File(Environment.getExternalStorageDirectory() + path);
+
+        Log.d(TAG, Environment.getExternalStorageDirectory() + path);
+        if (!pathname.exists())
+            pathname.mkdir();
+
+        jsonFile = new File(Environment.getExternalStorageDirectory() + path, fileName);
 
         try {
             jsonFile.createNewFile();
@@ -132,7 +139,7 @@ public class RecordService extends Service implements Runnable{
 
         String m = "" + (now.get(GregorianCalendar.MONTH)+1); //Monate beginnen bei 0
         String d = "" +  now.get(GregorianCalendar.DAY_OF_MONTH);
-        String h = "" +  now.get(GregorianCalendar.HOUR);
+        String h = "" +  (now.get(GregorianCalendar.HOUR)  + 12 * now.get(GregorianCalendar.AM_PM));
         String min = "" +  now.get(GregorianCalendar.MINUTE);
         String s = "" +  now.get(GregorianCalendar.SECOND);
 
@@ -160,7 +167,6 @@ public class RecordService extends Service implements Runnable{
     private String dataToJson() {
 
         String ret =    "  {\n"
-                + "    \"time\": \"" + now() + "\",\n"
                 + "    \"temperature\": " + Double.toString(temperature) + ",\n"
                 + "    \"humidity\": " + Double.toString(humidity) + ",\n"
                 + "    \"illuminance\": " + Double.toString(illuminance) + ",\n"

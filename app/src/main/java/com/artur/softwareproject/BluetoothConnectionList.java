@@ -147,6 +147,13 @@ public class BluetoothConnectionList extends AppCompatActivity{
                     Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
                 }
+                return true;
+
+            case R.id.vr_menu_start:
+                Intent vrIntent = new Intent(BluetoothConnectionList.this, VRmenu.class);
+                BluetoothConnectionList.this.startActivity(vrIntent);
+
+                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
