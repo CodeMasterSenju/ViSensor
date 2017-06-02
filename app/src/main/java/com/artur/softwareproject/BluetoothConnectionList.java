@@ -1,14 +1,12 @@
 package com.artur.softwareproject;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,6 +17,7 @@ import android.os.Handler;
 import android.bluetooth.*;
 import android.widget.Toast;
 
+import java.io.File;
 import java.util.ArrayList;
 
 /**
@@ -42,6 +41,10 @@ public class BluetoothConnectionList extends AppCompatActivity{
     private static final long SCAN_PERIOD = 5000;
     private final int REQUEST_ENABLE_BT = 1;
 
+    private File topLevelDir;
+    private File jsonDir;
+    private File objDir;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,6 +56,32 @@ public class BluetoothConnectionList extends AppCompatActivity{
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         mHandler = new Handler();
+
+        //Creating the directory structure for the app.
+        topLevelDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor");
+        jsonDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Json");
+        objDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj");
+
+        if(!topLevelDir.exists()) {
+            topLevelDir.mkdir();
+
+            if (!jsonDir.exists()) {
+                jsonDir.mkdir();
+            }
+
+            if (!objDir.exists()) {
+                objDir.mkdir();
+            }
+        } else if(!jsonDir.exists()) {
+            jsonDir.mkdir();
+
+            if(!objDir.exists()) {
+                objDir.mkdir();
+            }
+        } else if(!objDir.exists()) {
+            objDir.mkdir();
+        }
+
 
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -147,6 +176,14 @@ public class BluetoothConnectionList extends AppCompatActivity{
                     Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
                 }
+
+                return true;
+
+            case R.id.vr_menu_start:
+                Intent vrIntent = new Intent(this, VRmenu.class);
+                BluetoothConnectionList.this.startActivity(vrIntent);
+
+                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
