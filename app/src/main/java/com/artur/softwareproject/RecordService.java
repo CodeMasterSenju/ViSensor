@@ -9,7 +9,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -42,6 +41,7 @@ public class RecordService extends Service implements Runnable{
 
     private String fileName;
     private Thread recordThread;
+    private final String path = "/ViSensor/Json";
 
 
     @Override
@@ -65,8 +65,7 @@ public class RecordService extends Service implements Runnable{
         zPos = 0;
 
         fileName = now() + ".json";
-
-        jsonFile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+        jsonFile = new File(Environment.getExternalStorageDirectory() + path, fileName);
 
         try {
             jsonFile.createNewFile();
