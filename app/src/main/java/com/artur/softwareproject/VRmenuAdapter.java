@@ -19,7 +19,7 @@ public class VRmenuAdapter extends ArrayAdapter{
 
 
     public VRmenuAdapter(Activity context, String[] fileNames){
-        super(context, );
+        super(context, R.layout.bluetooth_list_pattern);
         this.fileNames = fileNames;
         this.context = context;
     }
