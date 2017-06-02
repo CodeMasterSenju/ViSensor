@@ -41,8 +41,8 @@ public class RecordService extends Service implements Runnable{
 
 
     private String fileName;
-    private final String path = "/ViSensor/JSON";
     private Thread recordThread;
+    private final String path = "/ViSensor/Json";
 
 
     @Override

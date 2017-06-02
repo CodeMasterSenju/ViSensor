@@ -6,6 +6,14 @@
     tools:context=".Main">
 
     <item
+        android:id="@+id/vr_menu_start"
+        android:orderInCategory="0"
+        android:title="Menu"
+        app:showAsAction="always"
+        android:icon="@drawable/ic_visibility">
+    </item>
+
+    <item
         android:id="@+id/refresh"
         android:orderInCategory="100"
         android:title="Menu"
