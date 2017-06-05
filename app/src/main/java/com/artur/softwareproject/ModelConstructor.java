@@ -25,6 +25,7 @@ public class ModelConstructor
      *
      * @param coordinates Array of coordinates that should be surrounded by the 3D-Model
      * @param name        name of the .obj file without the obj suffix
+     * @param flatGround  should the ground be flat or have hills?
      * @return was the .obj file successfully created?
      */
     public boolean createModel(double[][] coordinates, String name, boolean flatGround)
@@ -62,6 +63,7 @@ public class ModelConstructor
      * Translate two-dimensional double array to Vector3D array with no y value exeeding 0
      *
      * @param coordinates coordinates to be translated
+     * @param flatGround  should the ground be flat or have hills?
      * @return passed coordinates as 2D-Vectors
      */
     private Vector3D[] translateToVectors(double[][] coordinates, boolean flatGround)
@@ -382,6 +384,11 @@ public class ModelConstructor
         v.addAll(Arrays.asList(vec));
     }
 
+    /**
+     * sort passed Vectors by the x value
+     *
+     * @param v
+     */
     private void sortVectorsAfterX(Vector3D[] v)
     {
         for (int i = 0; i < v.length; i++)
@@ -397,6 +404,7 @@ public class ModelConstructor
      * @param surroundingPoints points surrounding all points
      * @param name              name of the .obj file without the .obj suffix
      * @param vectors           all points
+     * @param flatGround        should the ground be flat or have hills?
      * @return
      */
     private String generateString(Vector3D[] surroundingPoints, String name, Vector3D[] vectors, boolean flatGround)
@@ -639,6 +647,7 @@ public class ModelConstructor
      * @param planes            arraylist of planes for the obj-file
      * @param surroundingPoints points surrounding all points
      * @param vectors           all points
+     * @param flatGround        should the ground be flat or have hills?
      */
     public void buildFloor(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D[] surroundingPoints, Vector3D[] vectors, boolean flatGround)
     {
@@ -748,6 +757,13 @@ public class ModelConstructor
         planes.addAll(floorplanes);
     }
 
+    /**
+     * @param vertices        arraylist of vertices for the obj file
+     * @param texturevertices arraylist of texturevertices for the obj file
+     * @param floorplanes     arraylist of floor-planes for the obj-file
+     * @param points          all points
+     * @param textureconstant constant to calculate texture vertices
+     */
     private void triangulate(ArrayList<Vector3D> vertices, ArrayList<double[]> texturevertices, ArrayList<int[]> floorplanes, Vector3D[] points, double textureconstant)
     {
         Triangulator t = new Triangulator();
