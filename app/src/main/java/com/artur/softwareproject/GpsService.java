@@ -13,7 +13,7 @@ import android.util.Log;
 
 /**
  * Created by Martin Kern on 16.05.2017.
- * Dieser Service Holt sich die Positionsdaten vom GPS-Modul
+ * This service gets the data from the GPS module.
  */
 
 public class GpsService extends Service implements LocationListener {
@@ -65,7 +65,7 @@ public class GpsService extends Service implements LocationListener {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(TAG, "GpsService wurde erzeugt.");
+        Log.d(TAG, "GpsService was created.");
 
         gpsManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         checkPermission("android.permission.ACCESS_FINE_LOCATION",1,0);

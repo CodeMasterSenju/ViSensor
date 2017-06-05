@@ -16,12 +16,12 @@ class Vector3D implements Comparable<Vector3D>
         this.z = z;
     }
 
-    public Vector3D( Vector2D v, double height)
-    {
-        this.x = v.dX;
-        this.z = v.dY;
-        this.y = height;
-    }
+//    public Vector3D( Vector2D v, double height)
+//    {
+//        this.x = v.dX;
+//        this.z = v.dY;
+//        this.y = height;
+//    }
 
     public Vector3D(Vector3D v) {
         this.x = v.x;

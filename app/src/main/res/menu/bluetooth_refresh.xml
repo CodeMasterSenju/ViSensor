@@ -21,11 +21,4 @@
         android:icon="@drawable/ic_action_refresh">
     </item>
 
-    <item
-        android:id="@+id/vr_menu_start"
-        android:orderInCategory="0"
-        android:title="Menu"
-        app:showAsAction="always"
-        android:icon="@drawable/ic_visibility">
-    </item>
 </menu>

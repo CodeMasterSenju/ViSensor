@@ -2,6 +2,10 @@ package com.artur.softwareproject;
 
 import static java.lang.Math.pow;
 
+/**
+ * This class provides methods to convert the raw data from the bluetooth device into usable units.
+ */
+
 public class ConvertData {
 
     public static Integer shortUnsignedAtOffset(byte[] c, int offset) {
@@ -44,3 +48,5 @@ public class ConvertData {
         return shortUnsignedAtOffset(v, offset) / 128.0;
     }
 }
+
+//EOF

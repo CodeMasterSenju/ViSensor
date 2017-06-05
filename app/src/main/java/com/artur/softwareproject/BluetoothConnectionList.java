@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 /**
  * Created by artur_000 on 01.05.2017.
- * Liste um verfügbare Bluetooth-Geräte anzuzeigen.
+ * An activity that displays a list of available bluetooth devices.
  */
 
 public class BluetoothConnectionList extends AppCompatActivity{
@@ -178,13 +178,6 @@ public class BluetoothConnectionList extends AppCompatActivity{
                 }
                 return true;
 
-            case R.id.vr_menu_start:
-                Intent vrIntent = new Intent(BluetoothConnectionList.this, VRmenu.class);
-                BluetoothConnectionList.this.startActivity(vrIntent);
-
-                return true;
-
-                return true;
 
             case R.id.vr_menu_start:
                 Intent vrIntent = new Intent(this, VRmenu.class);
@@ -202,3 +195,5 @@ public class BluetoothConnectionList extends AppCompatActivity{
         super.onDestroy();
     }
 }
+
+//EOF
