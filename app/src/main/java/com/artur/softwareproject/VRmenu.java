@@ -1,8 +1,10 @@
 package com.artur.softwareproject;
 
+import android.app.DialogFragment;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
@@ -13,9 +15,11 @@ import java.io.File;
  * Created by artur_000 on 01.05.2017.
  */
 
-public class VRmenu extends AppCompatActivity {
+public class VRmenu extends AppCompatActivity implements FileDeleteDialog.NoticeDialogListener{
 
-    private String[] sessionFiles;
+    private static final String TAG = VRmenu.class.getSimpleName();
+
+    private String[] sessionFileNames;
     private final String path = "/ViSensor/Json";
     private final File pathName = new File(Environment.getExternalStorageDirectory().toString() + path);
 
@@ -28,10 +32,10 @@ public class VRmenu extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vr_menu);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
-        sessionFiles = pathName.list();
+        sessionFileNames = pathName.list();
 
         sessions = (ListView) findViewById(R.id.sessionList);
-        adapter = new VRmenuAdapter(this, sessionFiles);
+        adapter = new VRmenuAdapter(this, sessionFileNames);
         sessions.setAdapter(adapter);
     }
 
@@ -49,5 +53,14 @@ public class VRmenu extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        Log.d(TAG, "VRmenu onPositiveClick: Check.");
+        sessionFileNames = pathName.list();
+        adapter.notifyDataSetChanged();
+    }
+    public void onDialogNegativeClick(DialogFragment dialog) {
+
     }
 }

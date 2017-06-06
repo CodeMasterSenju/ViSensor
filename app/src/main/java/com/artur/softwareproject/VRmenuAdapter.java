@@ -1,10 +1,13 @@
 package com.artur.softwareproject;
 
 import android.app.Activity;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
-import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,16 +17,18 @@ import android.widget.TextView;
 
 import java.io.File;
 
-public class VRmenuAdapter extends ArrayAdapter{
+public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.NoticeDialogListener{
 
     private static final String TAG = VRmenuAdapter.class.getSimpleName();
 
     private String[] fileNames;
-    private Activity context;
+    private AppCompatActivity context;
     private TextView sessionName;
     private TextView sessionCount;
+    private File jsonForDelete, objForDelete;
 
-    public VRmenuAdapter(Activity context, String[] fileNames){
+
+    public VRmenuAdapter(AppCompatActivity context, String[] fileNames){
         super(context, R.layout.vr_menu_list_pattern, fileNames);
         this.fileNames = fileNames;
         this.context = context;
@@ -43,21 +48,24 @@ public class VRmenuAdapter extends ArrayAdapter{
         customView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                //TODO: Adjust the URI to the final format. Check for file existence.
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
-                String jsonFile = "JSON/" + fileNames[position];
-                String objFile = "OBJ/" + fileNames[position].replace("json", "obj");
-                Log.d(TAG, "JSON-File: " + jsonFile);
-                Log.d(TAG, "OBJ-File: " + objFile);
 
+                String json = "JSON/" + fileNames[position];
+                String obj = "OBJ/" + fileNames[position].replace("json", "obj");
 
-                Uri webVRUri = Uri.parse("file://" + baseDirectory + "/ViSensor/index.html?sensor=temperature?file=" + jsonFile);
-                Log.d(TAG,"URI: " + webVRUri.toString());
+                File objFile = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames[position].replace("json", "obj"));
+                File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" + fileNames[position]);
+                File html = new File(baseDirectory + "/ViSensor/halloWelt.html");
+
+                Uri webVRUri = Uri.parse("content://com.android.provider/ViSensor/ViSensor/index.html?sensor=light?file=" + json);
 
                 Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
                 webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
                 webVRIntent.setData(webVRUri);
                 webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                webVRIntent.setPackage("com.android.chrome");
+                webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
 
                 context.startActivity(webVRIntent);
 
@@ -70,14 +78,34 @@ public class VRmenuAdapter extends ArrayAdapter{
             @Override
             public boolean onLongClick(View v) {
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
-                String jsonFile = baseDirectory + "/JSON/" + fileNames[position];
-                String objFile = baseDirectory + "/OBJ/" + fileNames[position].replace("json", "obj");
+                objForDelete = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames[position].replace("json", "obj"));
+                jsonForDelete = new File(baseDirectory + "/ViSensor/JSON/" + fileNames[position]);
+
+                showDelDialog();
+
                 return true;
             }
         });
 
         return customView;
     }
+
+    public void showDelDialog() {
+        DialogFragment delDialog = new FileDeleteDialog();
+        delDialog.show(context.getFragmentManager(), "FileDeleteDialog");
+
+    }
+
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        Log.d(TAG, "VRmenuAdapter onPositiveClick: Check.");
+
+        if (jsonForDelete.exists())
+            jsonForDelete.delete();
+
+        if (objForDelete.exists())
+            objForDelete.delete();
+    }
+    public void onDialogNegativeClick(DialogFragment dialog) {/*nothing*/}
 }
 
 //EOF
