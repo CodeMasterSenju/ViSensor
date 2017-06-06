@@ -25,6 +25,7 @@ public class ModelConstructor
      *
      * @param coordinates Array of coordinates that should be surrounded by the 3D-Model
      * @param name        name of the .obj file without the obj suffix
+     * @param flatGround  should the ground be flat or have hills?
      * @return was the .obj file successfully created?
      */
 
@@ -65,6 +66,7 @@ public class ModelConstructor
      * Translate two-dimensional double array to Vector3D array with no y value exeeding 0
      *
      * @param coordinates coordinates to be translated
+     * @param flatGround  should the ground be flat or have hills?
      * @return passed coordinates as 2D-Vectors
      */
     private Vector3D[] translateToVectors(double[][] coordinates, boolean flatGround)
@@ -370,7 +372,7 @@ public class ModelConstructor
         {
             deg = acos(v[i].sub(avg).normalize().x);
             if (v[i].sub(avg).z < 0) deg = 2 * PI - deg;
-            v[i].setDegree(deg);
+            v[i].comp = deg;
         }
         Arrays.sort(v);
     }
@@ -392,11 +394,26 @@ public class ModelConstructor
     }
 
     /**
+     * sort passed Vectors by the x value
+     *
+     * @param v
+     */
+    private void sortVectorsAfterX(Vector3D[] v)
+    {
+        for (int i = 0; i < v.length; i++)
+        {
+            v[i].comp = v[i].x;
+        }
+        Arrays.sort(v);
+    }
+
+    /**
      * Generate the String needed for creating the obj-file from the parameters
      *
      * @param surroundingPoints points surrounding all points
      * @param name              name of the .obj file without the .obj suffix
      * @param vectors           all points
+     * @param flatGround        should the ground be flat or have hills?
      * @return
      */
     private String generateString(Vector3D[] surroundingPoints, String name, Vector3D[] vectors, boolean flatGround)
@@ -639,54 +656,79 @@ public class ModelConstructor
      * @param planes            arraylist of planes for the obj-file
      * @param surroundingPoints points surrounding all points
      * @param vectors           all points
+     * @param flatGround        should the ground be flat or have hills?
      */
     public void buildFloor(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D[] surroundingPoints, Vector3D[] vectors, boolean flatGround)
     {
-
         double extraSpace = 5000;
         double textureconstant = 10;
         ArrayList<int[]> floorplanes = new ArrayList<>();
 
-        for (int i = 0; i < surroundingPoints.length; i++)
-        {
-            int j = i + 1;
-            if (j == surroundingPoints.length)
-                j = 0;
-
-            Vector3D avg = getAverage(vectors);
-
-            Vector3D ni = surroundingPoints[i].sub(avg);
-            ni.y = 0;
-            ni = ni.normalize();
-
-            Vector3D nj = surroundingPoints[j].sub(avg);
-            nj.y = 0;
-            nj = nj.normalize();
-
-            avg = vectors[0];
-
-            vertices.add(avg);
-            vertices.add(surroundingPoints[i]);
-            vertices.add(surroundingPoints[j]);
-            vertices.add(surroundingPoints[i].add(ni.scale(extraSpace)));
-            vertices.add(surroundingPoints[j].add(nj.scale(extraSpace)));
-
-            texturevertices.add(new double[]{(avg.x - surroundingPoints[0].x) / textureconstant, (avg.z - surroundingPoints[0].z) / textureconstant});
-            texturevertices.add(new double[]{(surroundingPoints[i].x - surroundingPoints[0].x) / textureconstant, (surroundingPoints[i].z - surroundingPoints[0].z) / textureconstant});
-            texturevertices.add(new double[]{(surroundingPoints[j].x - surroundingPoints[0].x) / textureconstant, (surroundingPoints[j].z - surroundingPoints[0].z) / textureconstant});
-            texturevertices.add(new double[]{(surroundingPoints[i].add(ni.scale(extraSpace)).x - surroundingPoints[0].x) / textureconstant, (surroundingPoints[i].add(ni.scale(extraSpace)).z - surroundingPoints[0].z) / textureconstant});
-            texturevertices.add(new double[]{(surroundingPoints[j].add(nj.scale(extraSpace)).x - surroundingPoints[0].x) / textureconstant, (surroundingPoints[j].add(nj.scale(extraSpace)).z - surroundingPoints[0].z) / textureconstant});
-
-
-            int s = vertices.size();
-            int ts = texturevertices.size();
-
-            floorplanes.add(new int[]{s - 1, 1, ts - 1, s - 2, 1, ts - 2, s - 3, 1, ts - 3});
-            floorplanes.add(new int[]{s - 1, 1, ts - 1, s - 0, 1, ts - 0, s - 2, 1, ts - 2});
-            floorplanes.add(new int[]{s - 3, 1, ts - 3, s - 2, 1, ts - 2, s - 4, 1, ts - 4});
-        }
+        Vector3D avg = getAverage(vectors);
 
         if (!flatGround)
+        {
+            ArrayList<Vector3D> floorPoints = new ArrayList<>();
+
+            for (int i = 0; i < surroundingPoints.length; i++)
+            {
+                Vector3D ni = surroundingPoints[i].sub(avg);
+                ni.y = 0;
+                ni.normalize();
+                floorPoints.add(surroundingPoints[i].add(ni.scale(extraSpace)));
+                floorPoints.add(surroundingPoints[i]);
+            }
+
+            floorPoints.addAll(Arrays.asList(vectors));
+            Vector3D[] points = new Vector3D[floorPoints.size()];
+            points = floorPoints.toArray(points);
+
+            sortVectorsAfterX(points);
+
+            triangulate(vertices, texturevertices, floorplanes, points, textureconstant);
+        } else
+        {
+            for (int i = 0; i < surroundingPoints.length; i++)
+            {
+                int j = i + 1;
+                if (j == surroundingPoints.length)
+                    j = 0;
+
+                avg = getAverage(vectors);
+
+                Vector3D ni = surroundingPoints[i].sub(avg);
+                ni.y = 0;
+                ni = ni.normalize();
+
+                Vector3D nj = surroundingPoints[j].sub(avg);
+                nj.y = 0;
+                nj = nj.normalize();
+
+                avg = vectors[0];
+
+                vertices.add(avg);
+                vertices.add(surroundingPoints[i]);
+                vertices.add(surroundingPoints[j]);
+                vertices.add(surroundingPoints[i].add(ni.scale(extraSpace)));
+                vertices.add(surroundingPoints[j].add(nj.scale(extraSpace)));
+
+                texturevertices.add(new double[]{avg.x / textureconstant, avg.z / textureconstant});
+                texturevertices.add(new double[]{surroundingPoints[i].x / textureconstant, surroundingPoints[i].z / textureconstant});
+                texturevertices.add(new double[]{surroundingPoints[j].x / textureconstant, surroundingPoints[j].z / textureconstant});
+                texturevertices.add(new double[]{surroundingPoints[i].add(ni.scale(extraSpace)).x / textureconstant, surroundingPoints[i].add(ni.scale(extraSpace)).z / textureconstant});
+                texturevertices.add(new double[]{surroundingPoints[j].add(nj.scale(extraSpace)).x / textureconstant, surroundingPoints[j].add(nj.scale(extraSpace)).z / textureconstant});
+
+
+                int s = vertices.size();
+                int ts = texturevertices.size();
+
+                floorplanes.add(new int[]{s - 1, 1, ts - 1, s - 2, 1, ts - 2, s - 3, 1, ts - 3});
+                floorplanes.add(new int[]{s - 1, 1, ts - 1, s - 0, 1, ts - 0, s - 2, 1, ts - 2});
+                floorplanes.add(new int[]{s - 3, 1, ts - 3, s - 2, 1, ts - 2, s - 4, 1, ts - 4});
+            }
+        }
+
+        /*if(!flatGround)
         {
             for (int i = 1; i < vectors.length; i++)
             {
@@ -700,11 +742,7 @@ public class ModelConstructor
                     if (pointInTriangle(p, v1, v2, v3))
                     {
                         vertices.add(p);
-                        texturevertices.add(new double[]{(p.x - surroundingPoints[0].x) / textureconstant, (p.z - surroundingPoints[0].z) / textureconstant});
-
-                        Log.d("floorplanebefore", "x: " + vertices.get(floorplanes.get(j)[0] - 1).x + "y: " + vertices.get(floorplanes.get(j)[0] - 1).y + "z: " + vertices.get(floorplanes.get(j)[0] - 1).z + "\n" +
-                                "x: " + vertices.get(floorplanes.get(j)[3] - 1).x + "y: " + vertices.get(floorplanes.get(j)[3] - 1).y + "z: " + vertices.get(floorplanes.get(j)[3] - 1).z + "\n" +
-                                "x: " + vertices.get(floorplanes.get(j)[6] - 1).x + "y: " + vertices.get(floorplanes.get(j)[6] - 1).y + "z: " + vertices.get(floorplanes.get(j)[6] - 1).z + "\n");
+                        texturevertices.add(new double[]{p.x / textureconstant, p.z / textureconstant});
 
                         floorplanes.add(floorplanes.get(j).clone());
                         floorplanes.add(floorplanes.get(j).clone());
@@ -718,53 +756,43 @@ public class ModelConstructor
                         floorplanes.get(floorplanes.size() - 1)[6] = vertices.size();
                         floorplanes.get(floorplanes.size() - 1)[8] = texturevertices.size();
 
-                        Log.d("floorplanesafter", "x: " + vertices.get(floorplanes.get(j)[0] - 1).x + "y: " + vertices.get(floorplanes.get(j)[0] - 1).y + "z: " + vertices.get(floorplanes.get(j)[0] - 1).z + "\n" +
-                                "x: " + vertices.get(floorplanes.get(j)[3] - 1).x + "y: " + vertices.get(floorplanes.get(j)[3] - 1).y + "z: " + vertices.get(floorplanes.get(j)[3] - 1).z + "\n" +
-                                "x: " + vertices.get(floorplanes.get(j)[6] - 1).x + "y: " + vertices.get(floorplanes.get(j)[6] - 1).y + "z: " + vertices.get(floorplanes.get(j)[6] - 1).z + "\n");
                         break;
 
                     }
                 }
             }
-        }
+        }*/
 
         planes.addAll(floorplanes);
     }
 
     /**
-     * Determine if two points p1 nad p2 are on the same side of the line between a and b
-     *
-     * @param p1 point 1
-     * @param p2 point 2
-     * @param a  line-vertex 1
-     * @param b  line-vertex 2
-     * @return
+     * @param vertices        arraylist of vertices for the obj file
+     * @param texturevertices arraylist of texturevertices for the obj file
+     * @param floorplanes     arraylist of floor-planes for the obj-file
+     * @param points          all points
+     * @param textureconstant constant to calculate texture vertices
      */
-    private boolean sameSide(Vector3D p1, Vector3D p2, Vector3D a, Vector3D b)
+    private void triangulate(ArrayList<Vector3D> vertices, ArrayList<double[]> texturevertices, ArrayList<int[]> floorplanes, Vector3D[] points, double textureconstant)
     {
-        Vector3D cp1 = b.sub(a).cross(p1.sub(a));
-        Vector3D cp2 = b.sub(a).cross(p2.sub(a));
-        if (cp1.dot(cp2) > 0)
-            return true;
-        else
-            return false;
-    }
+        Triangulator t = new Triangulator();
+        Vector3D[][] r = t.triangulate(points);
 
-    /**
-     * Determine if a point p is inside a Triangle
-     *
-     * @param p point
-     * @param a triangle-vertex 1
-     * @param b triangle-vertex 2
-     * @param c triangle-vertex 3
-     * @return
-     */
-    private boolean pointInTriangle(Vector3D p, Vector3D a, Vector3D b, Vector3D c)
-    {
-        if (sameSide(p, a, b, c) && sameSide(p, b, a, c) && sameSide(p, c, a, b))
-            return true;
-        else
-            return false;
+        for (int i = 0; i < r.length; i++)
+        {
+            vertices.add(r[i][0]);
+            vertices.add(r[i][1]);
+            vertices.add(r[i][2]);
+
+            texturevertices.add(new double[]{r[i][0].x / textureconstant, r[i][0].z / textureconstant});
+            texturevertices.add(new double[]{r[i][1].x / textureconstant, r[i][1].z / textureconstant});
+            texturevertices.add(new double[]{r[i][2].x / textureconstant, r[i][2].z / textureconstant});
+
+            int s = vertices.size();
+            int ts = texturevertices.size();
+
+            floorplanes.add(new int[]{s - 0, 1, ts - 0, s - 1, 1, ts - 1, s - 2, 1, ts - 2});
+        }
     }
 
     /**
@@ -834,7 +862,7 @@ public class ModelConstructor
      */
     private int createFile(String s, String name)
     {
-        File f = new File(Environment.getExternalStorageDirectory() + "/ViSensor/OBJ/", name + ".obj");
+        File f = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj/", name + ".obj");
 
         try
         {
