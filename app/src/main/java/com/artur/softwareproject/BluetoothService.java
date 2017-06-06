@@ -17,6 +17,7 @@ import static java.util.UUID.fromString;
 
 /**
  * Created by artur_000 on 14.05.2017.
+ * This service handles the connection between smartphone and bluetooth device.
  */
 
 public class BluetoothService extends Service{
@@ -237,3 +238,5 @@ public class BluetoothService extends Service{
                 }
             };
 }
+
+//EOF

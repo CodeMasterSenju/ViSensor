@@ -28,7 +28,10 @@ public class ModelConstructor
      * @param flatGround  should the ground be flat or have hills?
      * @return was the .obj file successfully created?
      */
-    public boolean createModel(double[][] coordinates, String name, boolean flatGround)
+
+    private static final String TAG = ModelConstructor.class.getSimpleName();
+
+    public int createModel(double[][] coordinates, String name, boolean flatGround)
     {
         Vector3D[] vectors = translateToVectors(coordinates, flatGround);
 
@@ -68,15 +71,21 @@ public class ModelConstructor
      */
     private Vector3D[] translateToVectors(double[][] coordinates, boolean flatGround)
     {
-        Vector3D[] vectors = new Vector3D[coordinates.length];
+        int size = coordinates.length;
+
+        Vector3D[] vectors = new Vector3D[size];
+
+        //Random r = new Random();
 
         double maxY = Double.MIN_VALUE;
 
-        for (int i = 0; i < coordinates.length; i++)
+        for (int i = 0; i < size; i++)
         {
             double x = coordinates[i][0];
-            double y = coordinates[i][1];
-            double z = coordinates[i][2];
+            double y = coordinates[i][2];
+            double z = coordinates[i][1];
+
+            //y = r.nextDouble() * -5; //Test für die Höhenkoordinate
 
             Vector3D v = new Vector3D(x, y, z);
             vectors[i] = v;
@@ -87,7 +96,7 @@ public class ModelConstructor
 
         Vector3D s = new Vector3D(0, maxY, 0);
 
-        for (int i = 0; i < vectors.length; i++)
+        for (int i = 0; i < size; i++)
         {
             vectors[i] = vectors[i].sub(s);
             if (flatGround)
@@ -851,7 +860,7 @@ public class ModelConstructor
      * @param s    String to be written to the file
      * @param name name of the file without the .obj suffix
      */
-    private boolean createFile(String s, String name)
+    private int createFile(String s, String name)
     {
         File f = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj/", name + ".obj");
 
@@ -861,13 +870,15 @@ public class ModelConstructor
             BufferedWriter writer = new BufferedWriter(new FileWriter(f, false /*append*/));
             writer.write(s);
             writer.close();
+            Log.d(TAG, "Writing model was a success.");
         } catch (IOException e)
         {
             e.printStackTrace();
-            return false;
+            Log.d(TAG, "Writing model failed.");
+            return -1;//failure
         }
 
-        return true;
+        return 1;//success
 
     }
 }

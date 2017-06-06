@@ -10,6 +10,8 @@ import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import java.util.ArrayList;
+
 /**
  * Created by Martin Kern on 16.05.2017.
  * Dieser Service ermittelt die Aktuelle Position in karthesischen Koordinaten mit Hilfe von
@@ -32,6 +34,7 @@ public class PositionService extends Service {
     private final double mProPascal = 0.11; //Pro Pascal ca. 11cm Höhenunterschied.
 
     private boolean baroInit = false;
+
 
 
     //Formalitäten
@@ -135,6 +138,8 @@ public class PositionService extends Service {
         }
 
     };
+
+
 }
 
 //EOF

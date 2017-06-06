@@ -22,6 +22,7 @@ import static android.os.SystemClock.sleep;
 
 /**
  * Created by artur_000 on 03.05.2017.
+ * This is a list of available bluetooth devices.
  */
 
 public class BluetoothConnectionListAdapter extends ArrayAdapter {
@@ -127,3 +128,5 @@ public class BluetoothConnectionListAdapter extends ArrayAdapter {
         return customView;
     }
 }
+
+//EOF

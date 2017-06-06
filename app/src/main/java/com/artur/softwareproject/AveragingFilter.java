@@ -2,15 +2,15 @@ package com.artur.softwareproject;
 
 /**
  * Created by Martin Kern on 18.05.2017.
- * Ein simpler FIR-Filter
+ * A simple FIR-filter
  */
 
-public class Mittelwertfilter {
+public class AveragingFilter {
     private double[] buffer;
     private int buffSize, buffPos;
     private boolean first = true;
 
-    public Mittelwertfilter(int buffSize) {
+    public AveragingFilter(int buffSize) {
         buffer = new double[buffSize];
         this.buffSize = buffSize;
         buffPos = 0;

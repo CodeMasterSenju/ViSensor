@@ -2,7 +2,7 @@ package com.artur.softwareproject;
 
 /**
  * Created by artur_000 on 01.05.2017.
- * Zeigt Sensordaten in Echtzeit an.
+ * This Activity shows all data in real time. It also offers a button to record the data.
  */
 
 import android.app.ProgressDialog;
@@ -47,7 +47,8 @@ public class Main extends AppCompatActivity {
     private boolean record = false;
     private long currentTime;
     private int disconnect;
-    private Thread disconnectThread;
+    private int modelConstructed;
+    private Thread disconnectThread, modelConstructorThread;
     Handler updateHandler = new Handler();
 
 
@@ -61,8 +62,11 @@ public class Main extends AppCompatActivity {
         adapter = new SensorDataListAdapter(this, datenTypen, datenEinheit);
         sensorDataList.setAdapter(adapter);
         disconnect = 0;
+        modelConstructed = 0;
 
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(disconnectReceive, new IntentFilter("disconnectFilter"));
+
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(modelConstructorReceive, new IntentFilter("constructedFilter"));
 
         serviceIntent = new Intent(this, BluetoothService.class);
 
@@ -120,6 +124,13 @@ public class Main extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             disconnect = (int)intent.getExtras().get("disconnect");
+        }
+    };
+
+    private BroadcastReceiver modelConstructorReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            modelConstructed = (int)intent.getExtras().get("modelConstructed");
         }
     };
 
@@ -181,8 +192,45 @@ public class Main extends AppCompatActivity {
                     startService(recordServiceIntent);
 
                 } else {
+
+                    final ProgressDialog modelConstructorDialog = new ProgressDialog(Main.this);
+                    modelConstructorDialog.setMessage("Constructing 3D model...");
+                    modelConstructorDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    modelConstructorDialog.show();
+
+                    final Handler modelConstructorHandler = new Handler(){
+                        @Override
+                        public void handleMessage(Message msg) {
+                            modelConstructorDialog.dismiss();
+                            modelConstructorThread.interrupt();
+
+                            if (modelConstructed == 1)
+                                Toast.makeText(getApplicationContext(), "3D model created.", Toast.LENGTH_LONG).show();
+                            else
+                                Toast.makeText(getApplicationContext(), "3D model creation failed.", Toast.LENGTH_LONG).show();
+
+                            modelConstructed = 0;
+                        }
+                    };
+
+                    modelConstructorThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            while(modelConstructed == 0) {
+                                sleep(1500);
+                            }
+                            modelConstructorHandler.sendEmptyMessage(0);
+
+                        }
+                    });
+                    modelConstructorThread.start();
+
+                    stopService(recordServiceIntent);
+
                     item.setIcon(R.drawable.ic_action_save);
-                    Toast.makeText(getApplicationContext(), "Stop recording data", Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(getApplicationContext(), "Recording stopped.", Toast.LENGTH_LONG).show();
+
 
                     Animation a = AnimationUtils.loadAnimation(this, R.anim.textupslide);
                     TextView tv = (TextView) findViewById(R.id.recordClock);
@@ -190,7 +238,7 @@ public class Main extends AppCompatActivity {
 
                     recordClock.setVisibility(View.GONE);
                     record = false;
-                    stopService(recordServiceIntent);
+
                 }
 
                 return true;
