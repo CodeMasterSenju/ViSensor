@@ -853,7 +853,7 @@ public class ModelConstructor
      */
     private boolean createFile(String s, String name)
     {
-        File f = new File(Environment.getExternalStorageDirectory() + "/ViSensor/OBJ/", name + ".obj");
+        File f = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj/", name + ".obj");
 
         try
         {
