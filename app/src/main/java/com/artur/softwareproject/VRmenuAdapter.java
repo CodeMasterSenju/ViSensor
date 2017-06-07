@@ -3,6 +3,7 @@ package com.artur.softwareproject;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
@@ -16,6 +17,8 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.NoticeDialogListener{
 
@@ -26,6 +29,7 @@ public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.Noti
     private TextView sessionName;
     private TextView sessionCount;
     private File jsonForDelete, objForDelete;
+    private static final String ALLOWED_URI_CHARS = "=?";
 
 
     public VRmenuAdapter(AppCompatActivity context, String[] fileNames){
@@ -51,21 +55,18 @@ public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.Noti
                 //TODO: Adjust the URI to the final format. Check for file existence.
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
 
-                String json = "JSON/" + fileNames[position];
+                String json = fileNames[position].split("\\.")[0];
                 String obj = "OBJ/" + fileNames[position].replace("json", "obj");
 
                 File objFile = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames[position].replace("json", "obj"));
                 File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" + fileNames[position]);
-                File html = new File(baseDirectory + "/ViSensor/halloWelt.html");
 
-                Uri webVRUri = Uri.parse("content://com.android.provider/ViSensor/ViSensor/index.html?sensor=light?file=" + json);
+                File html = new File(Environment.getExternalStoragePublicDirectory("ViSensor") + "/index.html");
 
-                Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
-                webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
-                webVRIntent.setData(webVRUri);
-                webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
+                String requestURL = String.format("file://" + html + "?file=%s?sensor=%s", Uri.encode(json), Uri.encode("temperature"));
+
+                Intent webVRIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(requestURL));
+                webVRIntent.setComponent(new ComponentName("org.mozilla.firefox", "org.mozilla.firefox.App"));
 
                 context.startActivity(webVRIntent);
 
