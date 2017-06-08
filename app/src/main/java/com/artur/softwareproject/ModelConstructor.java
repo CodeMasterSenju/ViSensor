@@ -31,7 +31,7 @@ public class ModelConstructor
 
     private static final String TAG = ModelConstructor.class.getSimpleName();
 
-    public int createModel(double[][] coordinates, String name, boolean flatGround)
+    public static int createModel(double[][] coordinates, String name, boolean flatGround)
     {
         Vector3D[] vectors = translateToVectors(coordinates, flatGround);
 
@@ -51,7 +51,7 @@ public class ModelConstructor
      * @param vectors Set of Vectors to be surrounded
      * @return Set of Vectors surrounding the passed Vectors
      */
-    private Vector3D[] getSurroundingPoints(Vector3D[] vectors)
+    private static Vector3D[] getSurroundingPoints(Vector3D[] vectors)
     {
         Vector3D[] surroundingPoints = getOuterPoints(vectors);
 
@@ -69,7 +69,7 @@ public class ModelConstructor
      * @param flatGround  should the ground be flat or have hills?
      * @return passed coordinates as 2D-Vectors
      */
-    private Vector3D[] translateToVectors(double[][] coordinates, boolean flatGround)
+    private static Vector3D[] translateToVectors(double[][] coordinates, boolean flatGround)
     {
         int size = coordinates.length;
 
@@ -112,7 +112,7 @@ public class ModelConstructor
      * @param vectors set of Vectors
      * @return all outer points of the passed vectors
      */
-    private Vector3D[] getOuterPoints(Vector3D[] vectors)
+    private static Vector3D[] getOuterPoints(Vector3D[] vectors)
     {
         Vector3D[] initialOuterPoints = getInitialOuterPoints(vectors);
 
@@ -183,7 +183,7 @@ public class ModelConstructor
      * @param vectors Set of Vectors
      * @return few outer points of the passed vectors
      */
-    private Vector3D[] getInitialOuterPoints(Vector3D[] vectors)
+    private static Vector3D[] getInitialOuterPoints(Vector3D[] vectors)
     {
         ArrayList<Vector3D> outerPoints = new ArrayList<>();
 
@@ -270,7 +270,7 @@ public class ModelConstructor
      *
      * @param v surrounding Vectors
      */
-    private void expandOuterPoints(Vector3D[] v)
+    private static void expandOuterPoints(Vector3D[] v)
     {
         double extraSpace = 3;
 
@@ -345,7 +345,7 @@ public class ModelConstructor
      * @param vectors set of vectors
      * @return average vector
      */
-    private Vector3D getAverage(Vector3D[] vectors)
+    private static Vector3D getAverage(Vector3D[] vectors)
     {
         Vector3D avg = new Vector3D(0, 0, 0);
 
@@ -363,7 +363,7 @@ public class ModelConstructor
      *
      * @param v set of vectors
      */
-    private void sortVectors(Vector3D[] v)
+    private static void sortVectors(Vector3D[] v)
     {
         Vector3D avg = getAverage(v);
         double deg;
@@ -382,7 +382,7 @@ public class ModelConstructor
      *
      * @param v set of vectors
      */
-    private void sortVectors(ArrayList<Vector3D> v)
+    private static void sortVectors(ArrayList<Vector3D> v)
     {
         Vector3D[] vec = new Vector3D[v.size()];
         vec = v.toArray(vec);
@@ -398,7 +398,7 @@ public class ModelConstructor
      *
      * @param v
      */
-    private void sortVectorsAfterX(Vector3D[] v)
+    private static void sortVectorsAfterX(Vector3D[] v)
     {
         for (int i = 0; i < v.length; i++)
         {
@@ -416,7 +416,7 @@ public class ModelConstructor
      * @param flatGround        should the ground be flat or have hills?
      * @return
      */
-    private String generateString(Vector3D[] surroundingPoints, String name, Vector3D[] vectors, boolean flatGround)
+    private static String generateString(Vector3D[] surroundingPoints, String name, Vector3D[] vectors, boolean flatGround)
     {
         ArrayList<Vector3D> vetices = new ArrayList<>();
         ArrayList<Vector3D> normalvetices = new ArrayList<>();
@@ -466,7 +466,7 @@ public class ModelConstructor
      * @param v2              point 2
      * @param avg             Average Vector of Vectors to be surrounded by the fences
      */
-    private void buildFence(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D v2, Vector3D avg)
+    private static void buildFence(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D v2, Vector3D avg)
     {
         Vector3D n1 = avg.sub(v1);
         n1.y = 0;
@@ -495,7 +495,7 @@ public class ModelConstructor
      * @param n1              directional vector inside
      * @param nn1             directional vector to the left
      */
-    private void buildFencePost(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D n1, Vector3D nn1)
+    private static void buildFencePost(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D n1, Vector3D nn1)
     {
         double postWidth = 0.25;
         double postHeight = 1.0;
@@ -557,7 +557,7 @@ public class ModelConstructor
      * @param n1              directional vector inside from v1
      * @param n2              directional vector inside from v1
      */
-    private void buildFenceBoards(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D n1, Vector3D v2, Vector3D n2)
+    private static void buildFenceBoards(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D n1, Vector3D v2, Vector3D n2)
     {
         double boardSize = 0.3;
         double boardwidth = 0.05;
@@ -658,7 +658,7 @@ public class ModelConstructor
      * @param vectors           all points
      * @param flatGround        should the ground be flat or have hills?
      */
-    public void buildFloor(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D[] surroundingPoints, Vector3D[] vectors, boolean flatGround)
+    public static void buildFloor(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D[] surroundingPoints, Vector3D[] vectors, boolean flatGround)
     {
         double extraSpace = 5000;
         double textureconstant = 10;
@@ -773,7 +773,7 @@ public class ModelConstructor
      * @param points          all points
      * @param textureconstant constant to calculate texture vertices
      */
-    private void triangulate(ArrayList<Vector3D> vertices, ArrayList<double[]> texturevertices, ArrayList<int[]> floorplanes, Vector3D[] points, double textureconstant)
+    private static void triangulate(ArrayList<Vector3D> vertices, ArrayList<double[]> texturevertices, ArrayList<int[]> floorplanes, Vector3D[] points, double textureconstant)
     {
         Triangulator t = new Triangulator();
         Vector3D[][] r = t.triangulate(points);
@@ -806,7 +806,7 @@ public class ModelConstructor
      * @param name            name of the obj-file without the .obj suffix
      * @return
      */
-    private String makeString(Vector3D[] vertices, Vector3D[] normalvertices, double[][] texturevertices, int[][] planes, int floorStartIndex, String name)
+    private static String makeString(Vector3D[] vertices, Vector3D[] normalvertices, double[][] texturevertices, int[][] planes, int floorStartIndex, String name)
     {
         String s = "mtllib " + name + ".mtl\n";
 
@@ -860,7 +860,7 @@ public class ModelConstructor
      * @param s    String to be written to the file
      * @param name name of the file without the .obj suffix
      */
-    private int createFile(String s, String name)
+    private static int createFile(String s, String name)
     {
         File f = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj/", name + ".obj");
 
