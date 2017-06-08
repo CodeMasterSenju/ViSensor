@@ -62,7 +62,7 @@ public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.Noti
 
                 File html = new File(Environment.getExternalStoragePublicDirectory("ViSensor") + "/index.html");
 
-                String requestURL = String.format("file://" + html + "?file=%s?sensor=%s", Uri.encode(json), Uri.encode("temperature"));
+                String requestURL = String.format("file://" + html + "?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
 
                 Intent webVRIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(requestURL));
                 webVRIntent.setComponent(new ComponentName("org.mozilla.firefox", "org.mozilla.firefox.App"));
