@@ -56,7 +56,6 @@ public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.Noti
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
 
                 String json = fileNames[position].split("\\.")[0];
-                String obj = "OBJ/" + fileNames[position].replace("json", "obj");
 
                 File objFile = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames[position].replace("json", "obj"));
                 File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" + fileNames[position]);
