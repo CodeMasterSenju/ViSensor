@@ -7,7 +7,9 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <permission android:name="android.permission.BLUETOOTH" android:label="BLUETOOTH" />
     <permission android:name="android.permission.BLUETOOTH_ADMIN" />
@@ -34,6 +36,7 @@
         <service android:name=".BaroService"/>
         <service android:name="PositionService"/>
         <service android:name="RecordService"/>
+        <service android:name=".SimpleWebServer" />
 
         <provider
             android:name="android.support.v4.content.FileProvider"

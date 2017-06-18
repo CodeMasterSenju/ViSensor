@@ -1,0 +1,47 @@
+<!--
+ Copyright (C) 2017 Jean Büsche
+ 
+ This file is part of visensor-vr.
+ 
+ visensor-vr is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
+ (at your option) any later version.
+ 
+ visensor-vr is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with visensor-vr.  If not, see <http://www.gnu.org/licenses/>.
+ 
+-->
+
+<html>
+
+<head>
+	<script src="aframe.min.js"></script>
+	<script src="d3.v4.min.js"></script>
+	<script src="jquery-1.10.2.js"></script>
+</head>
+
+<body>
+	<a-scene stats>
+		<a-assets>
+			<img id="groundTexture" src="floor.jpg">
+		</a-assets>
+
+		<a-sky color="lightblue"></a-sky>
+		<a-plane src="#groundTexture" rotation="-90 0 0" width="100" height="100"></a-plane>
+
+		<a-camera id="camera">
+			<!-- TODO: create better cursor -->
+			<a-cursor fuse="true" timeout="10" color="#4CC3D9"></a-cursor>
+		</a-camera>
+	</a-scene>
+
+	<script src="display.js"></script>
+</body>
+
+</html>

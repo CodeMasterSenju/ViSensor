@@ -1,6 +1,7 @@
 package com.artur.softwareproject;
 
 import android.app.DialogFragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -26,6 +27,8 @@ public class VRmenu extends AppCompatActivity implements FileDeleteDialog.Notice
     private ListView sessions;
     private VRmenuAdapter adapter;
 
+    private Intent webServerIntent;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +36,12 @@ public class VRmenu extends AppCompatActivity implements FileDeleteDialog.Notice
         setContentView(R.layout.activity_vr_menu);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
         sessionFileNames = pathName.list();
+
+        //SimpleWebServer simpleWebServer = new SimpleWebServer(8080, this.getAssets());
+        //simpleWebServer.start();
+
+        webServerIntent = new Intent(this, SimpleWebServer.class);
+        startService(webServerIntent);
 
         sessions = (ListView) findViewById(R.id.sessionList);
         adapter = new VRmenuAdapter(this, sessionFileNames);
@@ -53,6 +62,12 @@ public class VRmenu extends AppCompatActivity implements FileDeleteDialog.Notice
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopService(webServerIntent);
     }
 
     public void onDialogPositiveClick(DialogFragment dialog) {
