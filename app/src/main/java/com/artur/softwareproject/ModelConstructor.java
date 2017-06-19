@@ -187,8 +187,6 @@ public class ModelConstructor
     {
         ArrayList<Vector3D> outerPoints = new ArrayList<>();
 
-        if (vectors.length <= 2)//if there are too few points return rectangle
-        {
             double xMin = -3;
             double zMin = -3;
             double xMax = 3;
@@ -205,6 +203,9 @@ public class ModelConstructor
                 if (vectors[i].z > zMax)
                     zMax = vectors[i].z;
             }
+
+        if (vectors.length <= 2 || xMax - xMin < 1 || zMax - zMin < 1)//if there are too few points or they are to little apart from another return rectangle
+        {
             outerPoints.add(new Vector3D(xMin, 0, zMin));
             outerPoints.add(new Vector3D(xMin, 0, zMax));
             outerPoints.add(new Vector3D(xMax, 0, zMin));
@@ -728,41 +729,6 @@ public class ModelConstructor
             }
         }
 
-        /*if(!flatGround)
-        {
-            for (int i = 1; i < vectors.length; i++)
-            {
-                for (int j = 0; j < floorplanes.size(); j++)
-                {
-                    Vector3D v1 = vertices.get(floorplanes.get(j)[0] - 1);
-                    Vector3D v2 = vertices.get(floorplanes.get(j)[3] - 1);
-                    Vector3D v3 = vertices.get(floorplanes.get(j)[6] - 1);
-                    Vector3D p = vectors[i].add(new Vector3D(0, 0, 0));
-
-                    if (pointInTriangle(p, v1, v2, v3))
-                    {
-                        vertices.add(p);
-                        texturevertices.add(new double[]{p.x / textureconstant, p.z / textureconstant});
-
-                        floorplanes.add(floorplanes.get(j).clone());
-                        floorplanes.add(floorplanes.get(j).clone());
-
-                        floorplanes.get(j)[0] = vertices.size();
-                        floorplanes.get(j)[2] = texturevertices.size();
-
-                        floorplanes.get(floorplanes.size() - 2)[3] = vertices.size();
-                        floorplanes.get(floorplanes.size() - 2)[5] = texturevertices.size();
-
-                        floorplanes.get(floorplanes.size() - 1)[6] = vertices.size();
-                        floorplanes.get(floorplanes.size() - 1)[8] = texturevertices.size();
-
-                        break;
-
-                    }
-                }
-            }
-        }*/
-
         planes.addAll(floorplanes);
     }
 
@@ -808,7 +774,7 @@ public class ModelConstructor
      */
     private static String makeString(Vector3D[] vertices, Vector3D[] normalvertices, double[][] texturevertices, int[][] planes, int floorStartIndex, String name)
     {
-        String s = "mtllib " + name + ".mtl\n";
+        String s = "mtllib env.mtl\n";
 
         Vector3D v;
         double[] tv;
