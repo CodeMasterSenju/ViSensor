@@ -1,6 +1,7 @@
 package com.artur.softwareproject;
 
 import android.app.DialogFragment;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
@@ -27,6 +28,8 @@ public class VRmenu extends AppCompatActivity{
     private ListView sessions;
     private VRmenuAdapter adapter;
 
+    private Intent webServerIntent;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +39,12 @@ public class VRmenu extends AppCompatActivity{
         sessionFileList = new ArrayList<>();
         for (String s : pathName.list())
             sessionFileList.add(s);
+
+        //SimpleWebServer simpleWebServer = new SimpleWebServer(8080, this.getAssets());
+        //simpleWebServer.start();
+
+        webServerIntent = new Intent(this, SimpleWebServer.class);
+        startService(webServerIntent);
 
         sessions = (ListView) findViewById(R.id.sessionList);
         adapter = new VRmenuAdapter(this, sessionFileList);
@@ -58,6 +67,11 @@ public class VRmenu extends AppCompatActivity{
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopService(webServerIntent);
+    }
 
     public VRmenuAdapter getAdapter() {return adapter;}
 }

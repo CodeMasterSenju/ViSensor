@@ -3,6 +3,7 @@ package com.artur.softwareproject;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
@@ -17,6 +18,8 @@ import android.widget.TextView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 public class VRmenuAdapter extends ArrayAdapter {
 
@@ -29,6 +32,7 @@ public class VRmenuAdapter extends ArrayAdapter {
     private TextView sessionCount;
     private File jsonForDelete, objForDelete;
     private int currentPosition;
+    private static final String ALLOWED_URI_CHARS = "=?";
 
 
     public VRmenuAdapter(AppCompatActivity context, ArrayList<String> fileNames){
@@ -55,18 +59,20 @@ public class VRmenuAdapter extends ArrayAdapter {
                 //TODO: Adjust the URI to the final format. Check for file existence.
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
 
-                String json = "JSON/" + fileNames.get(position);
-                String obj = "OBJ/" + fileNames.get(position).replace("json", "obj");
+                String json = fileNames.get(position).split("\\.")[0];
 
                 File objFile = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames.get(position).replace("json", "obj"));
                 File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" + fileNames.get(position));
-                File html = new File(baseDirectory + "/ViSensor/halloWelt.html");
 
-                Uri webVRUri = Uri.parse("content://com.android.provider/ViSensor/ViSensor/index.html?sensor=light?file=" + json);
+                File html = new File(Environment.getExternalStoragePublicDirectory("ViSensor") + "/index.html");
+
+                String requestURL = String.format("http://localhost:8080/index.html?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
+
+                //String requestURL = "http://192.168.0.33:8080/index.html?file=2017-4-27-6-51-22&sensor=illuminance";
 
                 Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
                 webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
-                webVRIntent.setData(webVRUri);
+                webVRIntent.setData(Uri.parse(requestURL));
                 webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
