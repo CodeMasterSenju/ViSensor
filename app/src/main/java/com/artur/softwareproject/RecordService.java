@@ -39,8 +39,7 @@ public class RecordService extends Service implements Runnable{
     private File jsonFile;
     private final String path = "/ViSensor/Json";
     private String fileName;
-
-    private ModelConstructor mConstr;
+    
     private ArrayList<double[]> positionList; //Positionsdaten, die vom ModelConstructor verwendet werden.
 
 
@@ -67,7 +66,6 @@ public class RecordService extends Service implements Runnable{
         humidity = 0;
         fileName = now();
         positionList = new ArrayList<>();
-        mConstr = new ModelConstructor();
 
         //Verzeichnis, an dem JSON-Datei gespeichert wird.
         File pathname = new File(Environment.getExternalStorageDirectory() + path);
@@ -222,7 +220,7 @@ public class RecordService extends Service implements Runnable{
             double[][] posArray = new double[3][positionList.size()];
             posArray = positionList.toArray(posArray);
 
-            int created = mConstr.createModel(posArray, fileName, false);
+            int created = ModelConstructor.createModel(posArray, fileName, false);
             Log.d(TAG, "ModelCreator status: " + created);
             Intent mConstrIntent = new Intent();
             mConstrIntent.putExtra("modelConstructed", created);
