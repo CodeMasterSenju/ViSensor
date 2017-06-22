@@ -2,7 +2,7 @@ package com.artur.softwareproject;
 
 /**
  * Created by artur_000 on 01.05.2017.
- * This Activity shows all data in real time. It also offers a button to record the data.
+ * This Activity shows all data in real time. It also offers a button to recording the data.
  */
 
 import android.app.ProgressDialog;
@@ -16,6 +16,7 @@ import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -35,21 +36,22 @@ public class Main extends AppCompatActivity {
 
     private static final String TAG = Main.class.getSimpleName();
 
-    public String [] datenTypen = {"Temperatur", "Luftfeuchtigkeit","Helligkeit","Position"};
-    static public String [] datenEinheit = {"°C", "%", "lux", "m"};
+    public String [] dataTypes = {"Temperature", "Humidity", "Illuminance", "Position"};//getResources().getStringArray(R.array.dataTyes);
+    public String [] dataUnits = {"°C", "%", "lux", "m"};//getResources().getStringArray(R.array.dataUnits);
     private ListView sensorDataList;
     private TextView recordClock;
     private SensorDataListAdapter adapter;
-    private BluetoothAdapter bluetoothAdapter;
     private Intent serviceIntent;
     private Intent posServiceIntent;
     private Intent recordServiceIntent;
-    private boolean record = false;
+    private boolean recording = false;
     private long currentTime;
     private int disconnect;
     private int modelConstructed;
+    private boolean gpsStatus; //false: unavailable, true: available
     private Thread disconnectThread, modelConstructorThread;
     Handler updateHandler = new Handler();
+    Menu mainMenu;
 
 
     @Override
@@ -57,9 +59,11 @@ public class Main extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG, "onCreate was called.");
+
         recordClock = (TextView) findViewById(R.id.recordClock);
         sensorDataList = (ListView) findViewById(R.id.dataList);
-        adapter = new SensorDataListAdapter(this, datenTypen, datenEinheit);
+        adapter = new SensorDataListAdapter(this, dataTypes, dataUnits);
         sensorDataList.setAdapter(adapter);
         disconnect = 0;
         modelConstructed = 0;
@@ -68,12 +72,17 @@ public class Main extends AppCompatActivity {
 
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(modelConstructorReceive, new IntentFilter("constructedFilter"));
 
+        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(gpsStatusReceive, new IntentFilter("gpsStatusFilter"));
+
+
         serviceIntent = new Intent(this, BluetoothService.class);
 
         posServiceIntent = new Intent(this, PositionService.class);
         startService(posServiceIntent);
 
         recordServiceIntent = new Intent(this, RecordService.class);
+
+        gpsStatus = false;
     }
 
     Runnable timerRunnable = new Runnable() {
@@ -112,6 +121,7 @@ public class Main extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.main_menu, menu);
+        mainMenu = menu;
         return true;
     }
 
@@ -131,6 +141,20 @@ public class Main extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             modelConstructed = (int)intent.getExtras().get("modelConstructed");
+        }
+    };
+
+    //Stop recording, if gps signal is lost.
+    private BroadcastReceiver gpsStatusReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "Received message containing gps Status.");
+            gpsStatus = (boolean)intent.getExtras().get("gpsStatus");
+            if (recording && !gpsStatus) {
+                Log.d(TAG, "Calling stopRecording().");
+                stopRecording();
+
+            }
         }
     };
 
@@ -172,12 +196,14 @@ public class Main extends AppCompatActivity {
                 return true;
 
             case R.id.record_data:
-                Intent resetIntent = new Intent();
-                resetIntent.putExtra("reset", "");
-                resetIntent.setAction("resetFilter");
-                LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
 
-                if (!record) {
+                Log.d(TAG, "Record button was Pressed. Gps status: " + gpsStatus);
+                if (!recording && gpsStatus) {
+                    Intent resetIntent = new Intent();
+                    resetIntent.putExtra("reset", "");
+                    resetIntent.setAction("resetFilter");
+                    LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
+
                     item.setIcon(R.drawable.ic_action_stop);
                     Toast.makeText(getApplicationContext(), "Start recording data", Toast.LENGTH_LONG).show();
                     recordClock.setVisibility(View.VISIBLE);
@@ -188,57 +214,12 @@ public class Main extends AppCompatActivity {
                     tv.startAnimation(a);
 
                     currentTime = System.currentTimeMillis();
-                    record = true;
+                    recording = true;
                     startService(recordServiceIntent);
 
                 } else {
-
-                    final ProgressDialog modelConstructorDialog = new ProgressDialog(Main.this);
-                    modelConstructorDialog.setMessage("Constructing 3D model...");
-                    modelConstructorDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                    modelConstructorDialog.show();
-
-                    final Handler modelConstructorHandler = new Handler(){
-                        @Override
-                        public void handleMessage(Message msg) {
-                            modelConstructorDialog.dismiss();
-                            modelConstructorThread.interrupt();
-
-                            if (modelConstructed == 1)
-                                Toast.makeText(getApplicationContext(), "3D model created.", Toast.LENGTH_LONG).show();
-                            else
-                                Toast.makeText(getApplicationContext(), "3D model creation failed.", Toast.LENGTH_LONG).show();
-
-                            modelConstructed = 0;
-                        }
-                    };
-
-                    modelConstructorThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            while(modelConstructed == 0) {
-                                sleep(1500);
-                            }
-                            modelConstructorHandler.sendEmptyMessage(0);
-
-                        }
-                    });
-                    modelConstructorThread.start();
-
-                    stopService(recordServiceIntent);
-
-                    item.setIcon(R.drawable.ic_action_save);
-
-                    Toast.makeText(getApplicationContext(), "Recording stopped.", Toast.LENGTH_LONG).show();
-
-
-                    Animation a = AnimationUtils.loadAnimation(this, R.anim.textupslide);
-                    TextView tv = (TextView) findViewById(R.id.recordClock);
-                    tv.startAnimation(a);
-
-                    recordClock.setVisibility(View.GONE);
-                    record = false;
-
+                    if (recording)
+                        stopRecording();
                 }
 
                 return true;
@@ -253,4 +234,54 @@ public class Main extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    private void stopRecording() {
+        final ProgressDialog modelConstructorDialog = new ProgressDialog(Main.this);
+        modelConstructorDialog.setMessage("Constructing 3D model...");
+        modelConstructorDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        modelConstructorDialog.show();
+
+        final Handler modelConstructorHandler = new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                modelConstructorDialog.dismiss();
+                modelConstructorThread.interrupt();
+
+                if (modelConstructed == 1)
+                    Toast.makeText(getApplicationContext(), "3D model created.", Toast.LENGTH_LONG).show();
+                else
+                    Toast.makeText(getApplicationContext(), "3D model creation failed.", Toast.LENGTH_LONG).show();
+
+                modelConstructed = 0;
+            }
+        };
+
+        modelConstructorThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                stopService(recordServiceIntent);
+                while (modelConstructed == 0) {
+                    sleep(1000);
+                }
+                modelConstructorHandler.sendEmptyMessage(0);
+
+            }
+        });
+        modelConstructorThread.start();
+
+        MenuItem item = mainMenu.findItem(R.id.record_data);
+
+        item.setIcon(R.drawable.ic_action_save);
+
+        Toast.makeText(getApplicationContext(), "Recording stopped.", Toast.LENGTH_LONG).show();
+
+
+        Animation a = AnimationUtils.loadAnimation(this, R.anim.textupslide);
+        TextView tv = (TextView) findViewById(R.id.recordClock);
+        tv.startAnimation(a);
+
+        recordClock.setVisibility(View.GONE);
+        recording = false;
+    }
 }
+//EOF

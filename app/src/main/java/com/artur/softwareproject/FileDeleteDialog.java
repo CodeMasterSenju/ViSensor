@@ -23,7 +23,7 @@ public class FileDeleteDialog extends DialogFragment {
         builder.setMessage(R.string.del_dialog)
                 .setPositiveButton(R.string.del, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-
+                        ((VRmenu)getActivity()).getAdapter().onDialogPositiveClick();//Delete file
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -34,30 +34,6 @@ public class FileDeleteDialog extends DialogFragment {
         // Create the AlertDialog object and return it
         return builder.create();
     }
-
-    public interface NoticeDialogListener {
-        public void onDialogPositiveClick(DialogFragment dialog);
-        public void onDialogNegativeClick(DialogFragment dialog);
-    }
-
-    NoticeDialogListener mListener;
-
-    public void onAttach(Context context) {
-        Log.d(TAG,"Delete Dialog onAttach was called.");
-        super.onAttach(context);
-        // Verify that the host activity implements the callback interface
-        try {
-            Log.d(TAG,"Delete Dialog onAttach success.");
-            // Instantiate the NoticeDialogListener so we can send events to the host
-            mListener = (NoticeDialogListener) context;
-        } catch (ClassCastException e) {
-            Log.d(TAG,"Delete Dialog onAttach failure.");
-            // The activity doesn't implement the interface, throw exception
-            throw new ClassCastException(context.toString()
-                    + " must implement NoticeDialogListener");
-        }
-    }
-
 
 
 }

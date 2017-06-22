@@ -1,7 +1,22 @@
 <resources>
     <string name="app_name">ViSensor</string>
-    <string name="recordButton">Aufnahme</string>
-    <string name="del_dialog">Do you really wat to delete this file?</string>
+    <string name="recordButton">Record</string>
+    <string name="del_dialog">Do you really want to delete this file?</string>
     <string name="cancel">Cancel</string>
     <string name="del">Delete</string>
+    
+    <string-array name="dataTyes">
+        <item>Temperature</item>
+        <item>Humidity</item>
+        <item>Luminosity</item>
+        <item>Position</item>
+    </string-array>
+
+    <string-array name="dataUnits">
+        <item>°C</item>
+        <item>%</item>
+        <item>lux</item>
+        <item>m</item>
+    </string-array>
+
 </resources>

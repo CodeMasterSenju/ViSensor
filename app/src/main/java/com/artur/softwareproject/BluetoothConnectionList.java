@@ -27,6 +27,9 @@ import java.util.ArrayList;
 
 public class BluetoothConnectionList extends AppCompatActivity{
 
+    private static final String TAG = BluetoothConnectionList.class.getSimpleName();
+
+
     private ListView bluetoothList;
     private ListAdapter ListAdapter;
     private BluetoothManager bluetoothManager;
