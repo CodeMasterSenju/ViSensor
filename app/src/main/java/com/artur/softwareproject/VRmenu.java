@@ -12,6 +12,8 @@ import android.widget.ListView;
 
 import java.io.File;
 
+import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
+
 /**
  * Created by artur_000 on 01.05.2017.
  */
@@ -35,7 +37,14 @@ public class VRmenu extends AppCompatActivity implements FileDeleteDialog.Notice
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vr_menu);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
-        sessionFileNames = pathName.list();
+        String[] filenames = getIntent().getStringArrayExtra(EXTRA_FILES);
+        if(filenames==null)
+        {
+            sessionFileNames = pathName.list();
+        }else
+        {
+            sessionFileNames = filenames;
+        }
 
         //SimpleWebServer simpleWebServer = new SimpleWebServer(8080, this.getAssets());
         //simpleWebServer.start();

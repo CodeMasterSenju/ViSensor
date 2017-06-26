@@ -100,6 +100,7 @@ public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.Noti
         DialogFragment delDialog = new FileDeleteDialog();
         delDialog.show(context.getFragmentManager(), "FileDeleteDialog");
 
+
     }
 
     public void onDialogPositiveClick(DialogFragment dialog) {
@@ -110,6 +111,7 @@ public class VRmenuAdapter extends ArrayAdapter implements FileDeleteDialog.Noti
 
         if (objForDelete.exists())
             objForDelete.delete();
+
     }
     public void onDialogNegativeClick(DialogFragment dialog) {/*nothing*/}
 }
