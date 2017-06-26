@@ -33,6 +33,9 @@ class Vector3D implements Comparable<Vector3D>
 
     public Vector3D normalize()
     {
+        if(this.x == 0 && this.y == 0 && this.z == 0)
+            return new Vector3D(0,1,0);
+
         double l = (double) (1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z));
         double x = this.x * l;
         double y = this.y * l;
