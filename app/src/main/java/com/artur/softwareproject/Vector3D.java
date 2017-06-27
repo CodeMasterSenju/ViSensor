@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
  * Created by gabriel on 27.05.17.
  */
 
-class Vector3D implements Comparable<Vector3D>
+public class Vector3D implements Comparable<Vector3D>
 {
     public double x, y, z, comp;
 
@@ -33,10 +33,11 @@ class Vector3D implements Comparable<Vector3D>
 
     public Vector3D normalize()
     {
-        if(this.x == 0 && this.y == 0 && this.z == 0)
-            return new Vector3D(0,1,0);
+        double t = Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+        if(t==0)
+            return new Vector3D(1,0,0);
 
-        double l = (double) (1 / Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z));
+        double l = (double) (1 / t);
         double x = this.x * l;
         double y = this.y * l;
         double z = this.z * l;

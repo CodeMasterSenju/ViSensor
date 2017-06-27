@@ -329,7 +329,13 @@ public class ModelConstructor
                 n = n.scale(-1.0);
             }
 
-            double t = (extraSpace) / (extraVectors[i].dot(n));
+            double t;
+            double tdot = (extraVectors[i].dot(n));
+
+            if (tdot==0)
+                t=extraSpace;
+            else
+                t = (extraSpace) / (extraVectors[i].dot(n));
 
             extraVectors[i] = extraVectors[i].scale(t);
         }
@@ -354,6 +360,10 @@ public class ModelConstructor
         {
             avg = avg.add(vectors[i]);
         }
+
+        if(vectors.length==0)
+            return new Vector3D(1,0,0);
+
         avg = avg.scale(1.0 / (double) vectors.length);
 
         return avg;
