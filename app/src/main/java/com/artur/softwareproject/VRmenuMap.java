@@ -104,7 +104,7 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     private void setUpClusterer()
     {
         // Position the map.
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(51.503186, -0.126446), 10));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(47.6779, 9.1732), 7));
 
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
@@ -121,7 +121,6 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
 
         mClusterManager.setOnClusterClickListener(this);
         mClusterManager.setOnClusterItemClickListener(this);
-
 
         // Add cluster items (markers) to the cluster manager.
         addItems();
