@@ -3,26 +3,32 @@ package com.artur.softwareproject;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
-import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.JsonReader;
+import android.util.JsonToken;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ListView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
+import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
+import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 
 import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
@@ -44,13 +50,11 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         setContentView(R.layout.activity_vrmenu_map);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
         sessionFileNames = pathName.list();
     }
-
 
     /**
      * Manipulates the map once available.
@@ -66,11 +70,6 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     {
         mMap = googleMap;
         setUpClusterer();
-
-        /*// Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));*/
     }
 
     @Override
@@ -111,6 +110,10 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         // (Activity extends context, so we can pass 'this' in the constructor.)
         mClusterManager = new ClusterManager<GeoItem>(this, mMap);
 
+        mClusterManager.setAlgorithm(new NonHierarchicalDistanceBasedAlgorithm<GeoItem>());
+        mClusterManager.setRenderer(new DefaultClusterRenderer<GeoItem>(this, mMap, mClusterManager));
+        ((DefaultClusterRenderer<GeoItem>) (mClusterManager.getRenderer())).setMinClusterSize(1);
+
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(mClusterManager);
@@ -122,37 +125,18 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
 
         // Add cluster items (markers) to the cluster manager.
         addItems();
-        addItems();
-        addItems();
-        mClusterManager.cluster();
     }
-
 
     private void addItems()
     {
         String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
 
-        /*// Set some lat/lng coordinates to start with.
-        double lat = 51.5145160;
-        double lng = -0.1270060;
-
-        // Add ten cluster items in close proximity, for purposes of this example.
-        for (int i = 0; i < 10; i++)
-        {
-            double offset = i / 60d;
-            lat = lat + offset;
-            lng = lng + offset;
-            GeoItem offsetItem = new GeoItem(lat, lng, "hi");
-            mClusterManager.addItem(offsetItem);
-        }*/
-        int i = 0;
         for (String item : sessionFileNames)
         {
             File f = new File(baseDirectory + "/ViSensor/JSON/" + item);
             LatLng l = getLatLng(f);
-            GeoItem geoItem = new GeoItem(l.latitude + (i / 60d), l.longitude + (i / 60d), item);
+            GeoItem geoItem = new GeoItem(l.latitude, l.longitude, item);
             mClusterManager.addItem(geoItem);
-            i++;
         }
     }
 
@@ -205,9 +189,53 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
 
     private LatLng getLatLng(File f)
     {
-        double lat = 51.5145160;
-        double lng = -0.1270060;
+        try
+        {
+            FileInputStream fileInputStream = new FileInputStream(f);
+            JsonReader reader = new JsonReader(new InputStreamReader(fileInputStream, "UTF-8"));
 
-        return new LatLng(lat, lng);
+            reader.setLenient(true);
+            reader.beginObject();
+
+            double lat = 0;
+            double lng = 0;
+
+            while (reader.hasNext() && reader.peek() == JsonToken.NAME)
+            {
+                String name = reader.nextName();
+                if (!name.equals("coordinates"))
+                {
+                    reader.skipValue();
+                } else
+                {
+                    reader.beginObject();
+                    while (reader.hasNext() && reader.peek() == JsonToken.NAME)
+                    {
+                        String name1 = reader.nextName();
+                        if (name1.equals("latitude"))
+                        {
+                            lat = reader.nextDouble();
+                        } else if (name1.equals("longitude"))
+                        {
+                            lng = reader.nextDouble();
+                        } else
+                        {
+                            reader.skipValue();
+                        }
+                    }
+                    return new LatLng(lat, lng);
+                }
+            }
+
+            Log.d("Failed", "Coordinates not found in json file");
+            return new LatLng(lat, lng);
+
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.d("Failed", "Error reading coordinates from json file");
+            return new LatLng(51.5145160, -0.1270060);
+        }
     }
 }
