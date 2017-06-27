@@ -5,6 +5,9 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.JsonReader;
+import android.util.JsonToken;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -20,6 +23,12 @@ import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgor
 import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 
 import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
@@ -180,10 +189,53 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
 
     private LatLng getLatLng(File f)
     {
-        //TODO implement method to read coordiantes from json fileS
-        double lat = 51.5145160;
-        double lng = -0.1270060;
+        try
+        {
+            FileInputStream fileInputStream = new FileInputStream(f);
+            JsonReader reader = new JsonReader(new InputStreamReader(fileInputStream, "UTF-8"));
 
-        return new LatLng(lat, lng);
+            reader.setLenient(true);
+            reader.beginObject();
+
+            double lat = 0;
+            double lng = 0;
+
+            while (reader.hasNext() && reader.peek() == JsonToken.NAME)
+            {
+                String name = reader.nextName();
+                if (!name.equals("coordinates"))
+                {
+                    reader.skipValue();
+                } else
+                {
+                    reader.beginObject();
+                    while (reader.hasNext() && reader.peek() == JsonToken.NAME)
+                    {
+                        String name1 = reader.nextName();
+                        if (name1.equals("latitude"))
+                        {
+                            lat = reader.nextDouble();
+                        } else if (name1.equals("longitude"))
+                        {
+                            lng = reader.nextDouble();
+                        } else
+                        {
+                            reader.skipValue();
+                        }
+                    }
+                    return new LatLng(lat, lng);
+                }
+            }
+
+            Log.d("Failed", "Coordinates not found in json file");
+            return new LatLng(lat, lng);
+
+
+        } catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.d("Failed", "Error reading coordinates from json file");
+            return new LatLng(51.5145160, -0.1270060);
+        }
     }
 }
