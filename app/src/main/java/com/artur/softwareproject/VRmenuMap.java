@@ -162,22 +162,18 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     @Override
     public boolean onClusterItemClick(ClusterItem clusterItem)
     {
+        Intent webServerIntent = new Intent(this, SimpleWebServer.class);
+        startService(webServerIntent);
+
         String fileName = ((GeoItem) clusterItem).getFilename();
 
-        String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
+        String json = fileName.split("\\.")[0];
 
-        String json = "JSON/" + fileName;
-        String obj = "OBJ/" + fileName.replace("json", "obj");
-
-        File objFile = new File(baseDirectory + "/ViSensor/OBJ/" + fileName.replace("json", "obj"));
-        File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" + fileName);
-        File html = new File(baseDirectory + "/ViSensor/halloWelt.html");
-
-        Uri webVRUri = Uri.parse("content://com.android.provider/ViSensor/ViSensor/index.html?sensor=light?file=" + json);
+        String requestURL = String.format("http://localhost:8080/index.html?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
 
         Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
         webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
-        webVRIntent.setData(webVRUri);
+        webVRIntent.setData(Uri.parse(requestURL));
         webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
