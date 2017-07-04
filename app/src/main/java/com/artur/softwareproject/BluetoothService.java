@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.*;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import java.util.UUID;
 import static java.util.UUID.fromString;
@@ -21,6 +22,8 @@ import static java.util.UUID.fromString;
  */
 
 public class BluetoothService extends Service{
+
+    private static final String TAG = BluetoothService.class.getSimpleName();
 
     private final UUID UUID_NOT = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
@@ -53,6 +56,7 @@ public class BluetoothService extends Service{
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG,"Bluetoothservice was started.");
         this.serviceIntent = intent;
 
         if(intent != null)
@@ -71,6 +75,7 @@ public class BluetoothService extends Service{
 
     @Override
     public void onDestroy() {
+        Log.d(TAG,"Bluetoothservice was destroyed.");
         mBluetoothGatt.disconnect();
         stopService(serviceIntent);
     }

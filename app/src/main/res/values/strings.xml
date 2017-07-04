@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ViSensor</string>
-    <string name="recordButton">Aufnahme</string>
-    <string name="del_dialog">Do you really wat to delete this file?</string>
+    <string name="recordButton">Record</string>
+    <string name="del_dialog">Do you really want to delete this file?</string>
     <string name="cancel">Cancel</string>
     <string name="del">Delete</string>
     <string name="title_activity_vrmenu_map">Map</string>
