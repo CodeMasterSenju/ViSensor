@@ -42,6 +42,7 @@ public class BluetoothConnectionList extends AppCompatActivity{
     private ArrayList<BluetoothDevice> bDevices = new ArrayList<>();
 
     private static final long SCAN_PERIOD = 5000;
+    public static final String EXTRA_FILES = "";
     private final int REQUEST_ENABLE_BT = 1;
 
     private File topLevelDir;
@@ -183,7 +184,7 @@ public class BluetoothConnectionList extends AppCompatActivity{
 
 
             case R.id.vr_menu_start:
-                Intent vrIntent = new Intent(this, VRmenu.class);
+                Intent vrIntent = new Intent(this, VRmenuMap.class);
                 BluetoothConnectionList.this.startActivity(vrIntent);
 
                 return true;

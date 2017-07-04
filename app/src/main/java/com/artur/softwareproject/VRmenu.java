@@ -13,6 +13,8 @@ import android.widget.ListView;
 import java.io.File;
 import java.util.ArrayList;
 
+import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
+
 /**
  * Created by artur_000 on 01.05.2017.
  */
