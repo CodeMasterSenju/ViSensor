@@ -6,12 +6,15 @@ package com.artur.softwareproject;
  */
 
 import android.app.ProgressDialog;
-import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
+import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -24,7 +27,6 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
-import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,20 +40,25 @@ public class Main extends AppCompatActivity {
 
     public String [] dataTypes = {"Temperature", "Humidity", "Illuminance", "Position"};//getResources().getStringArray(R.array.dataTyes);
     public String [] dataUnits = {"°C", "%", "lux", "m"};//getResources().getStringArray(R.array.dataUnits);
-    private ListView sensorDataList;
     private TextView recordClock;
     private SensorDataListAdapter adapter;
+    private Handler updateHandler = new Handler();
+    private Menu mainMenu;
+
     private Intent serviceIntent;
     private Intent posServiceIntent;
-    private Intent recordServiceIntent;
     private boolean recording = false;
     private long currentTime;
     private int disconnect;
     private int modelConstructed;
+    private ProgressDialog pd;
     private boolean gpsStatus; //false: unavailable, true: available
-    private Thread disconnectThread, modelConstructorThread;
-    Handler updateHandler = new Handler();
-    Menu mainMenu;
+    private Thread disconnectThread;
+    private RecordService rService;
+    private boolean rBound;
+
+
+
 
 
     @Override
@@ -62,15 +69,13 @@ public class Main extends AppCompatActivity {
         Log.d(TAG, "onCreate was called.");
 
         recordClock = (TextView) findViewById(R.id.recordClock);
-        sensorDataList = (ListView) findViewById(R.id.dataList);
+        ListView sensorDataList = (ListView) findViewById(R.id.dataList);
         adapter = new SensorDataListAdapter(this, dataTypes, dataUnits);
         sensorDataList.setAdapter(adapter);
         disconnect = 0;
         modelConstructed = 0;
 
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(disconnectReceive, new IntentFilter("disconnectFilter"));
-
-        LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(modelConstructorReceive, new IntentFilter("constructedFilter"));
 
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(gpsStatusReceive, new IntentFilter("gpsStatusFilter"));
 
@@ -80,15 +85,13 @@ public class Main extends AppCompatActivity {
         posServiceIntent = new Intent(this, PositionService.class);
         startService(posServiceIntent);
 
-        recordServiceIntent = new Intent(this, RecordService.class);
-
         gpsStatus = false;
     }
 
     Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
-            ((BaseAdapter)adapter).notifyDataSetChanged();
+            adapter.notifyDataSetChanged();
 
             long millis = System.currentTimeMillis() - currentTime;
             int seconds = (int) (millis / 1000);
@@ -137,26 +140,20 @@ public class Main extends AppCompatActivity {
         }
     };
 
-    private BroadcastReceiver modelConstructorReceive = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            modelConstructed = (int)intent.getExtras().get("modelConstructed");
-        }
-    };
-
     //Stop recording, if gps signal is lost.
     private BroadcastReceiver gpsStatusReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Received message containing gps Status.");
             gpsStatus = (boolean)intent.getExtras().get("gpsStatus");
             if (recording && !gpsStatus) {
                 Log.d(TAG, "Calling stopRecording().");
                 stopRecording();
-
             }
         }
     };
+
+//==================================================================================================
+//==================================================================================================
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -215,11 +212,14 @@ public class Main extends AppCompatActivity {
 
                     currentTime = System.currentTimeMillis();
                     recording = true;
-                    startService(recordServiceIntent);
 
-                } else {
-                    if (recording)
-                        stopRecording();
+                    if (!rBound) {
+                        Intent intent = new Intent(this, RecordService.class);
+                        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+                    }
+
+                } else if (recording){
+                    stopRecording();
                 }
 
                 return true;
@@ -235,53 +235,142 @@ public class Main extends AppCompatActivity {
         }
     }
 
-    private void stopRecording() {
-        final ProgressDialog modelConstructorDialog = new ProgressDialog(Main.this);
-        modelConstructorDialog.setMessage("Constructing 3D model...");
-        modelConstructorDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        modelConstructorDialog.show();
+//==================================================================================================
+//==================================================================================================
 
-        final Handler modelConstructorHandler = new Handler(){
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            RecordService.LocalBinder binder = (RecordService.LocalBinder) service;
+            rService = binder.getService();
+            rBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            rBound = false;
+        }
+    };
+
+//==================================================================================================
+//==================================================================================================
+
+    private void stopRecording() {
+        final Context context = this;
+        AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
             @Override
-            public void handleMessage(Message msg) {
-                modelConstructorDialog.dismiss();
-                modelConstructorThread.interrupt();
+            protected void onPreExecute() {
+                pd = new ProgressDialog(context);
+                pd.setTitle("Processing...");
+                pd.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                pd.setMessage("Please wait.");
+                pd.setCancelable(false);
+                pd.setIndeterminate(true);
+                pd.show();
+            }
+
+            @Override
+            protected Void doInBackground(Void... params) {
+                modelConstructed = rService.create3dModel();
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void result) {
+                if (pd!=null) {
+                    pd.dismiss();
+                }
+
+                if (rBound) {
+                    unbindService(mConnection);
+                    rBound = false;
+                }
+
+
+                MenuItem item = mainMenu.findItem(R.id.record_data);
+
+                item.setIcon(R.drawable.ic_action_save);
+
+                Animation a = AnimationUtils.loadAnimation(context, R.anim.textupslide);
+                TextView tv = (TextView) findViewById(R.id.recordClock);
+                tv.startAnimation(a);
+
+                recordClock.setVisibility(View.GONE);
+                recording = false;
 
                 if (modelConstructed == 1)
-                    Toast.makeText(getApplicationContext(), "3D model created.", Toast.LENGTH_LONG).show();
-                else
-                    Toast.makeText(getApplicationContext(), "3D model creation failed.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), "Recording stopped.\n3D model created.", Toast.LENGTH_LONG).show();
+                else if (modelConstructed == -1)
+                    Toast.makeText(getApplicationContext(), "Recording stopped.\n3D model creation failed.", Toast.LENGTH_LONG).show();
 
-                modelConstructed = 0;
             }
         };
+        task.execute((Void[])null);
 
-        modelConstructorThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                stopService(recordServiceIntent);
-                while (modelConstructed == 0) {
-                    sleep(1000);
-                }
-                modelConstructorHandler.sendEmptyMessage(0);
-
-            }
-        });
-        modelConstructorThread.start();
-
-        MenuItem item = mainMenu.findItem(R.id.record_data);
-
-        item.setIcon(R.drawable.ic_action_save);
-
-        Toast.makeText(getApplicationContext(), "Recording stopped.", Toast.LENGTH_LONG).show();
-
-
-        Animation a = AnimationUtils.loadAnimation(this, R.anim.textupslide);
-        TextView tv = (TextView) findViewById(R.id.recordClock);
-        tv.startAnimation(a);
-
-        recordClock.setVisibility(View.GONE);
-        recording = false;
     }
+/**The following code was originally used to stop the record service. It worked just fine with the
+ * exception of a progress indicator. Deep going changes were needed to make the progress indicator work.
+ * This code is left as a reference.
+  */
+//    private void stopRecording() {
+//        final ProgressDialog modelConstructorDialog = new ProgressDialog(Main.this);
+//        modelConstructorDialog.setMessage("Constructing 3D model...");
+//        modelConstructorDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+//        modelConstructorDialog.show();
+//
+//        final Handler modelConstructorHandler = new Handler(){
+//            @Override
+//            public void handleMessage(Message msg) {
+//                modelConstructorDialog.dismiss();
+//                modelConstructorThread.interrupt();
+//
+//                if (modelConstructed == 1)
+//                    Toast.makeText(getApplicationContext(), "Recording stopped.\n3D model created.", Toast.LENGTH_LONG).show();
+//                else if (modelConstructed == -1)
+//                    Toast.makeText(getApplicationContext(), "Recording stopped.\n3D model creation failed.", Toast.LENGTH_LONG).show();
+//                else
+//                    Toast.makeText(getApplicationContext(), "A severe error occurred.", Toast.LENGTH_LONG).show();
+//
+//
+//                modelConstructed = 0;
+//            }
+//        };
+//
+//        final Context thisActivity = this;
+//
+//        modelConstructorThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//
+//                Intent stopRecordIntent = new Intent(thisActivity, RecordService.class);
+//                stopService(stopRecordIntent);
+//                while(modelConstructed == 0) {
+//                    try {
+//                        Thread.sleep(500);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//
+//                modelConstructorHandler.sendEmptyMessage(0);
+//
+//            }
+//        });
+//        modelConstructorThread.start();
+//
+//        MenuItem item = mainMenu.findItem(R.id.record_data);
+//
+//        item.setIcon(R.drawable.ic_action_save);
+//
+//        Animation a = AnimationUtils.loadAnimation(this, R.anim.textupslide);
+//        TextView tv = (TextView) findViewById(R.id.recordClock);
+//        tv.startAnimation(a);
+//
+//        recordClock.setVisibility(View.GONE);
+//        recording = false;
+//    }
 }
 //EOF

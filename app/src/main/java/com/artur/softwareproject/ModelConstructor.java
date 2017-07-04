@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import static android.os.SystemClock.sleep;
 import static java.lang.Math.PI;
 import static java.lang.Math.acos;
 
@@ -29,7 +30,6 @@ public class ModelConstructor
      * @return was the .obj file successfully created?
      */
 
-    private static final String TAG = ModelConstructor.class.getSimpleName();
 
     public static int createModel(double[][] coordinates, String name, boolean flatGround)
     {
@@ -836,11 +836,9 @@ public class ModelConstructor
             BufferedWriter writer = new BufferedWriter(new FileWriter(f, false /*append*/));
             writer.write(s);
             writer.close();
-            Log.d(TAG, "Writing model was a success.");
         } catch (IOException e)
         {
             e.printStackTrace();
-            Log.d(TAG, "Writing model failed.");
             return -1;//failure
         }
 

@@ -56,7 +56,6 @@ public class VRmenuAdapter extends ArrayAdapter {
         customView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: Adjust the URI to the final format. Check for file existence.
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
 
                 String json = fileNames.get(position).split("\\.")[0];
@@ -64,20 +63,23 @@ public class VRmenuAdapter extends ArrayAdapter {
                 File objFile = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames.get(position).replace("json", "obj"));
                 File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" + fileNames.get(position));
 
-                File html = new File(Environment.getExternalStoragePublicDirectory("ViSensor") + "/index.html");
-
                 String requestURL = String.format("http://localhost:8080/index.html?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
 
-                //String requestURL = "http://192.168.0.33:8080/index.html?file=2017-4-27-6-51-22&sensor=illuminance";
+                if (!jsonFile.exists()) {
+                    Log.d(TAG, "JSON file was not found.");
+                } else {
+                    if (!objFile.exists()) {
+                        Log.d(TAG, "OBJ file was not found");
+                    }
+                    Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
+                    webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+                    webVRIntent.setData(Uri.parse(requestURL));
+                    webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
 
-                Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
-                webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
-                webVRIntent.setData(Uri.parse(requestURL));
-                webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
-
-                context.startActivity(webVRIntent);
+                    context.startActivity(webVRIntent);
+                }
 
 
             }
