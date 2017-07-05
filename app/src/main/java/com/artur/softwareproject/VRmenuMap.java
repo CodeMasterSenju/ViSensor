@@ -16,24 +16,20 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
-import com.google.maps.android.clustering.view.DefaultClusterRenderer;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 
 import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
 
-public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, ClusterManager.OnClusterClickListener, ClusterManager.OnClusterItemClickListener
+public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, ClusterManager.OnClusterClickListener, ClusterManager.OnClusterItemClickListener, ClusterManager.OnClusterItemInfoWindowClickListener, ClusterManager.OnClusterInfoWindowClickListener
 {
 
     private GoogleMap mMap;
@@ -111,16 +107,18 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         mClusterManager = new ClusterManager<GeoItem>(this, mMap);
 
         mClusterManager.setAlgorithm(new NonHierarchicalDistanceBasedAlgorithm<GeoItem>());
-        mClusterManager.setRenderer(new DefaultClusterRenderer<GeoItem>(this, mMap, mClusterManager));
-        ((DefaultClusterRenderer<GeoItem>) (mClusterManager.getRenderer())).setMinClusterSize(1);
+        mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap, mClusterManager));
 
         // Point the map's listeners at the listeners implemented by the cluster
         // manager.
         mMap.setOnCameraIdleListener(mClusterManager);
         mMap.setOnMarkerClickListener(mClusterManager);
+        mMap.setOnInfoWindowClickListener(mClusterManager);
 
         mClusterManager.setOnClusterClickListener(this);
         mClusterManager.setOnClusterItemClickListener(this);
+        mClusterManager.setOnClusterInfoWindowClickListener(this);
+        mClusterManager.setOnClusterItemInfoWindowClickListener(this);
 
         // Add cluster items (markers) to the cluster manager.
         addItems();
@@ -142,18 +140,6 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     @Override
     public boolean onClusterClick(Cluster cluster)
     {
-        String[] filenames = new String[cluster.getSize()];
-        Collection<GeoItem> items = cluster.getItems();
-        int i = 0;
-        for (GeoItem item : items)
-        {
-            filenames[i] = item.getFilename();
-            i++;
-        }
-
-        Intent vrIntent = new Intent(this, VRmenu.class);
-        vrIntent.putExtra(EXTRA_FILES, filenames);
-        VRmenuMap.this.startActivity(vrIntent);
 
 
         return false;
@@ -162,24 +148,8 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     @Override
     public boolean onClusterItemClick(ClusterItem clusterItem)
     {
-        Intent webServerIntent = new Intent(this, SimpleWebServer.class);
-        startService(webServerIntent);
 
-        String fileName = ((GeoItem) clusterItem).getFilename();
-
-        String json = fileName.split("\\.")[0];
-
-        String requestURL = String.format("http://localhost:8080/index.html?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
-
-        Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
-        webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
-        webVRIntent.setData(Uri.parse(requestURL));
-        webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
-
-        startActivity(webVRIntent);
-        return false;
+        return  false;
     }
 
     private LatLng getLatLng(File f)
@@ -232,5 +202,53 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
             Log.d("Failed", "Error reading coordinates from json file");
             return new LatLng(51.5145160, -0.1270060);
         }
+    }
+
+    @Override
+    public void onClusterInfoWindowClick(Cluster cluster)
+    {
+        Collection<Marker> markers = (Collection<Marker>)mClusterManager.getMarkerCollection().getMarkers();
+        Marker m = null;
+        for (Marker item : markers)
+        {
+            if(item != null && item.getPosition().equals(cluster.getPosition()))
+            {
+                m = item;
+            }
+        }
+        String[] filenames = new String[cluster.getSize()];
+        Collection<GeoItem> items = cluster.getItems();
+        int i = 0;
+        for (GeoItem item : items)
+        {
+            filenames[i] = item.getFilename();
+            i++;
+        }
+
+        Intent vrIntent = new Intent(this, VRmenu.class);
+        vrIntent.putExtra(EXTRA_FILES, filenames);
+        VRmenuMap.this.startActivity(vrIntent);
+    }
+
+    @Override
+    public void onClusterItemInfoWindowClick(ClusterItem clusterItem)
+    {
+        Intent webServerIntent = new Intent(this, SimpleWebServer.class);
+        startService(webServerIntent);
+
+        String fileName = ((GeoItem) clusterItem).getFilename();
+
+        String json = fileName.split("\\.")[0];
+
+        String requestURL = String.format("http://localhost:8080/index.html?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
+
+        Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
+        webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
+        webVRIntent.setData(Uri.parse(requestURL));
+        webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        webVRIntent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        webVRIntent.setPackage("com.android.chrome");//Use Google Chrome
+
+        startActivity(webVRIntent);
     }
 }
