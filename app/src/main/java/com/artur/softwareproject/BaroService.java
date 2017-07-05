@@ -12,12 +12,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.support.v4.content.LocalBroadcastManager;
-import android.util.Log;
 
 public class BaroService extends Service implements SensorEventListener {
-    private static final String TAG = BaroService.class.getSimpleName();
 
     //air pressure
     private double baro;
