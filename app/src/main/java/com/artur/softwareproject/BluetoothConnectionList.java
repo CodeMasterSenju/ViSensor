@@ -27,6 +27,9 @@ import java.util.ArrayList;
 
 public class BluetoothConnectionList extends AppCompatActivity{
 
+    private static final String TAG = BluetoothConnectionList.class.getSimpleName();
+
+
     private ListView bluetoothList;
     private ListAdapter ListAdapter;
     private BluetoothManager bluetoothManager;
@@ -165,7 +168,7 @@ public class BluetoothConnectionList extends AppCompatActivity{
                 bDevices.clear();
                 ((BaseAdapter)ListAdapter).notifyDataSetChanged();
 
-                if(mScanning == false)
+                if(!mScanning)
                 {
                     scanLeDevice(true);
                 }

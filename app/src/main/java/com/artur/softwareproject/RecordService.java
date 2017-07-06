@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,7 +21,7 @@ import java.util.GregorianCalendar;
 
 /**
  * Created by Martin Kern on 27.05.2017.
- * Dieser Service speichert aufgezeichnete Daten in einer JSON-Datei
+ * This service saves sensor data in a JSON file.
  */
 
 public class RecordService extends Service implements Runnable{
@@ -32,34 +33,39 @@ public class RecordService extends Service implements Runnable{
     private double humidity;
     private double illuminance;
     private double[] pos = {0,0,0};
+    private double[] gpsStartingPos = {0,0};
+    private boolean bGps;
+    private Runnable recService = this;
+    final private IBinder recordBinder = new LocalBinder();
+    final String path = "/ViSensor/Json";
 
     private boolean record = true;
     private boolean firstWrite = true;
 
     private File jsonFile;
-    private final String path = "/ViSensor/Json";
     private String fileName;
     
     private ArrayList<double[]> positionList; //Positionsdaten, die vom ModelConstructor verwendet werden.
 
-
     Handler recordHandler = new Handler();
-    private Thread recordThread;
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return recordBinder;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        //Registriere alle BroadcastReceiver
+        //Register BroadcastReceivers
         LocalBroadcastManager.getInstance(this).registerReceiver(temperatureReceive, new IntentFilter("temperatureFilter"));
         LocalBroadcastManager.getInstance(this).registerReceiver(humidityReceive, new IntentFilter("humidityFilter"));
         LocalBroadcastManager.getInstance(this).registerReceiver(opticalReceive, new IntentFilter("lightFilter"));
         LocalBroadcastManager.getInstance(this).registerReceiver(gpsReceive, new IntentFilter("gpsDistFilter"));
         LocalBroadcastManager.getInstance(this).registerReceiver(baroReceive, new IntentFilter("hDiffFilter"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(gpsRawReceive, new IntentFilter("gpsFilter"));
+
+        bGps = false;
 
         //Variablen initialisieren
         temperature = 0;
@@ -67,31 +73,16 @@ public class RecordService extends Service implements Runnable{
         fileName = now();
         positionList = new ArrayList<>();
 
-        //Verzeichnis, an dem JSON-Datei gespeichert wird.
+        //Directory, where thr JSON file is saved.
         File pathname = new File(Environment.getExternalStorageDirectory() + path);
 
         Log.d(TAG, Environment.getExternalStorageDirectory() + path);
 
-        //Existiert das Verzeichnis nicht, so wird es erzeugt.
-        if (!pathname.exists())
-            pathname.mkdir();
-
-        //Erzeuge neue JSON-Datei
-        jsonFile = new File(Environment.getExternalStorageDirectory() + path, fileName + ".json");
-
-        //Schreibe den Anfang der JSON-Datei.
-        try {
-            jsonFile.createNewFile();
-            BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-            writer.write("{\"session\": [\n");
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        //If the directory does not exist then create it.
+        if (!pathname.exists()) {
+            if (!pathname.mkdir())
+                Log.d(TAG, "Directory should have been created but wasn't.");
         }
-
-        //Starte den Thread zur Aufzeichnung
-        recordThread = new Thread(this);
-        recordThread.start();
     }
 
     @Override
@@ -110,10 +101,56 @@ public class RecordService extends Service implements Runnable{
         }
     };
 
+    private BroadcastReceiver gpsRawReceive = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            double gpsRaw[] = (double[])intent.getExtras().get("gpsRawData");
+
+            if(gpsRaw == null) {
+                gpsRaw = new double[2];
+                gpsRaw[0] = 0;
+                gpsRaw[1] = 0;
+            }
+
+            gpsStartingPos[0] = gpsRaw[0];
+            gpsStartingPos[1] = gpsRaw[1];
+
+            if (!bGps) {
+                bGps = true;
+
+                //Create JSON file
+                jsonFile = new File(Environment.getExternalStorageDirectory() + path, fileName + ".json");
+
+                //Write the beginning of the JSON file.
+                try {
+                    if(!jsonFile.createNewFile())
+                        Log.d(TAG, "Failed to create a new json file.");
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
+                    writer.write(   "{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[0] + ",\n" +
+                            "\"longitude\": " + gpsStartingPos[1] + "\n},\n{\"session\": [\n");
+                    writer.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                //Starting the recording thread
+                Thread recordThread = new Thread(recService);
+                recordThread.start();
+            }
+        }
+    };
+
     private BroadcastReceiver gpsReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             double[] gps = (double[])intent.getExtras().get("gpsDistanz");
+
+            if(gps == null) {
+                gps = new double[2];
+                gps[0] = 0;
+                gps[1] = 0;
+            }
+
             pos[0] = gps[0];
             pos[1] = gps[1];
         }
@@ -139,16 +176,17 @@ public class RecordService extends Service implements Runnable{
             illuminance = (double)intent.getExtras().get("light");
         }
     };
+    
 
 //BroadcastReceiver=End=============================================================================
 //==================================================================================================
 
-    //Gibt die aktuelle Zeit als String aus
+    //Creates a string that represents the current time.
     private String now() {
         GregorianCalendar now = new GregorianCalendar();
         String ret;
 
-        String m = "" + (now.get(GregorianCalendar.MONTH)+1); //Monate beginnen bei 0
+        String m = "" + (now.get(GregorianCalendar.MONTH)+1); //months start at 0
         String d = "" +  now.get(GregorianCalendar.DAY_OF_MONTH);
         String h = "" +  (now.get(GregorianCalendar.HOUR)  + 12 * now.get(GregorianCalendar.AM_PM));
         String min = "" +  now.get(GregorianCalendar.MINUTE);
@@ -177,7 +215,7 @@ public class RecordService extends Service implements Runnable{
 
     private String dataToJson() {
 
-        String ret =    "  {\n"
+        return    "  {\n"
                 + "    \"temperature\": " + Double.toString(temperature) + ",\n"
                 + "    \"humidity\": " + Double.toString(humidity) + ",\n"
                 + "    \"illuminance\": " + Double.toString(illuminance) + ",\n"
@@ -185,9 +223,15 @@ public class RecordService extends Service implements Runnable{
                 + "    \"yPos\": " + Double.toString(pos[1]) + ",\n"
                 + "    \"zPos\": " + Double.toString(pos[2]) + "\n"
                 + "  }";
-
-        return ret;
     }
+
+    public class LocalBinder extends Binder {
+        RecordService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return RecordService.this;
+        }
+    }
+
 
     @Override
     public void run() {
@@ -215,18 +259,7 @@ public class RecordService extends Service implements Runnable{
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        } else {
-
-            double[][] posArray = new double[3][positionList.size()];
-            posArray = positionList.toArray(posArray);
-
-            int created = ModelConstructor.createModel(posArray, fileName, false);
-            Log.d(TAG, "ModelCreator status: " + created);
-            Intent mConstrIntent = new Intent();
-            mConstrIntent.putExtra("modelConstructed", created);
-            mConstrIntent.setAction("constructedFilter");
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mConstrIntent);
-
+        } else {//write the end of json file
             try {
                 BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
                 writer.write("\n]}");
@@ -237,6 +270,13 @@ public class RecordService extends Service implements Runnable{
             return;
         }
         recordHandler.postDelayed(this, 1000); //run every second
+    }
+
+    public int create3dModel() {
+        Log.d(TAG, "About to call modelConstructor");
+        double[][] posArray = new double[3][positionList.size()];
+        posArray = positionList.toArray(posArray);
+        return ModelConstructor.createModel(posArray, fileName, false);
     }
 }
 

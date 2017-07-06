@@ -39,7 +39,7 @@ public class BluetoothConnectionListAdapter extends ArrayAdapter {
     public TextView bluetoothConnectionName;
     public TextView bluetoothConnectionStatus;
 
-    private static final String TAG = PositionService.class.getSimpleName();
+    private static final String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
 
     public BluetoothConnectionListAdapter(Activity context, ArrayList<String> bluetoothAddress, ArrayList<String> bluetoothName, ArrayList<BluetoothDevice> bDevices){
         super(context, R.layout.activity_bluetooth_connection, bluetoothAddress);

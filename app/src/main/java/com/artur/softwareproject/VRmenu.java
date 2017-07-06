@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.widget.ListView;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
 
@@ -18,11 +19,11 @@ import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
  * Created by artur_000 on 01.05.2017.
  */
 
-public class VRmenu extends AppCompatActivity implements FileDeleteDialog.NoticeDialogListener{
+public class VRmenu extends AppCompatActivity{
 
     private static final String TAG = VRmenu.class.getSimpleName();
 
-    private String[] sessionFileNames;
+    private ArrayList<String> sessionFileList;
     private final String path = "/ViSensor/Json";
     private final File pathName = new File(Environment.getExternalStorageDirectory().toString() + path);
 
@@ -37,14 +38,9 @@ public class VRmenu extends AppCompatActivity implements FileDeleteDialog.Notice
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vr_menu);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
-        String[] filenames = getIntent().getStringArrayExtra(EXTRA_FILES);
-        if(filenames==null)
-        {
-            sessionFileNames = pathName.list();
-        }else
-        {
-            sessionFileNames = filenames;
-        }
+        sessionFileList = new ArrayList<>();
+        for (String s : pathName.list())
+            sessionFileList.add(s);
 
         //SimpleWebServer simpleWebServer = new SimpleWebServer(8080, this.getAssets());
         //simpleWebServer.start();
@@ -53,7 +49,7 @@ public class VRmenu extends AppCompatActivity implements FileDeleteDialog.Notice
         startService(webServerIntent);
 
         sessions = (ListView) findViewById(R.id.sessionList);
-        adapter = new VRmenuAdapter(this, sessionFileNames);
+        adapter = new VRmenuAdapter(this, sessionFileList);
         sessions.setAdapter(adapter);
     }
 
@@ -79,12 +75,6 @@ public class VRmenu extends AppCompatActivity implements FileDeleteDialog.Notice
         stopService(webServerIntent);
     }
 
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        Log.d(TAG, "VRmenu onPositiveClick: Check.");
-        sessionFileNames = pathName.list();
-        adapter.notifyDataSetChanged();
-    }
-    public void onDialogNegativeClick(DialogFragment dialog) {
-
-    }
+    public VRmenuAdapter getAdapter() {return adapter;}
 }
+//EOF
