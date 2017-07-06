@@ -350,7 +350,7 @@ public class Triangulator
      * Takes points and creates Triangle Mesh by using Delaunay triangulation
      *
      * @param points the points, sorted by x-value increasing
-     * @return An Array of Triangles, wich are given in counter-clockwise order
+     * @return An Array of Triangles, each given in clockwise order
      */
     public Vector3D[][] triangulate(Vector3D[] points)
     {
