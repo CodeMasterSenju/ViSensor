@@ -1,7 +1,20 @@
 package com.artur.softwareproject;
 
-/**
- * Created by gabriel on 05.06.17.
+/*
+ *	ported from p bourke's triangulate.c
+ *	http://astronomy.swin.edu.au/~pbourke/terrain/triangulate/triangulate.c
+ *
+ *	fjenett, 20th february 2005, offenbach-germany.
+ *	contact: http://www.florianjenett.de/
+ *
+ *  adapted by gabriel scheibler
+ *
+ *  run like this:
+ *  	javac *.java
+ *  	java triangulate
+ *
+ *	to view the output: http://processing.org/
+ *
  */
 
 class ITRIANGLE
@@ -333,6 +346,12 @@ public class Triangulator
         return ntri;
     }
 
+    /**
+     * Takes points and creates Triangle Mesh by using Delaunay triangulation
+     *
+     * @param points the points, sorted by x-value increasing
+     * @return An Array of Triangles, wich are given in counter-clockwise order
+     */
     public Vector3D[][] triangulate(Vector3D[] points)
     {
         int nv = points.length;

@@ -140,16 +140,13 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     @Override
     public boolean onClusterClick(Cluster cluster)
     {
-
-
-        return false;
+        return false; // default onclusterclicked is called after
     }
 
     @Override
     public boolean onClusterItemClick(ClusterItem clusterItem)
     {
-
-        return  false;
+        return  false;  // default onclusterItemclicked is called after
     }
 
     private LatLng getLatLng(File f)
@@ -207,15 +204,6 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     @Override
     public void onClusterInfoWindowClick(Cluster cluster)
     {
-        Collection<Marker> markers = (Collection<Marker>)mClusterManager.getMarkerCollection().getMarkers();
-        Marker m = null;
-        for (Marker item : markers)
-        {
-            if(item != null && item.getPosition().equals(cluster.getPosition()))
-            {
-                m = item;
-            }
-        }
         String[] filenames = new String[cluster.getSize()];
         Collection<GeoItem> items = cluster.getItems();
         int i = 0;
@@ -225,17 +213,21 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
             i++;
         }
 
+        //Start VRmenu with the selected datasets
         Intent vrIntent = new Intent(this, VRmenu.class);
         vrIntent.putExtra(EXTRA_FILES, filenames);
         VRmenuMap.this.startActivity(vrIntent);
+        vrIntent.putExtra(EXTRA_FILES, (String)null);
     }
 
     @Override
     public void onClusterItemInfoWindowClick(ClusterItem clusterItem)
     {
+        //start Webserver
         Intent webServerIntent = new Intent(this, SimpleWebServer.class);
         startService(webServerIntent);
 
+        //start vr visualisation of the selected dataset in chrome
         String fileName = ((GeoItem) clusterItem).getFilename();
 
         String json = fileName.split("\\.")[0];
