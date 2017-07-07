@@ -825,6 +825,18 @@ public class ModelConstructor
             }
             ts += "\n";
             s += ts;
+
+
+
+            p = planes[i];
+            ts = "f ";
+
+            for (int j = p.length-1; j >= 2; j -= 3)
+            {
+                ts += p[j - 2] + "/" + p[j] + "/" + p[j - 1] + " ";
+            }
+            ts += "\n";
+            s += ts;
         }
 
         return s;
