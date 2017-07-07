@@ -84,6 +84,7 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
 
             Intent vrIntent = new Intent(this, VRmenu.class);
             //vrIntent.putExtra(EXTRA_FILES, array);
+            vrIntent.putExtra(EXTRA_FILES, (String)null);
             VRmenuMap.this.startActivity(vrIntent);
 
             return true;
@@ -156,7 +157,6 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         for (GeoItem item : items)
         {
             builder.include(item.getPosition());
-            Log.d("ff","negro");
         }
 
         try
@@ -248,7 +248,6 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         Intent vrIntent = new Intent(this, VRmenu.class);
         vrIntent.putExtra(EXTRA_FILES, filenames);
         VRmenuMap.this.startActivity(vrIntent);
-        vrIntent.putExtra(EXTRA_FILES, (String)null);
     }
 
     @Override
