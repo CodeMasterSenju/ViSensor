@@ -16,6 +16,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.maps.android.clustering.Cluster;
 import com.google.maps.android.clustering.ClusterItem;
@@ -120,8 +121,11 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         mClusterManager.setOnClusterInfoWindowClickListener(this);
         mClusterManager.setOnClusterItemInfoWindowClickListener(this);
 
+
         // Add cluster items (markers) to the cluster manager.
         addItems();
+
+        positionCamera();
     }
 
     private void addItems()
@@ -135,6 +139,33 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
             GeoItem geoItem = new GeoItem(l.latitude, l.longitude, item);
             mClusterManager.addItem(geoItem);
         }
+
+
+    }
+
+    /**
+     * position Camera so that all markers are visible
+     */
+    private void positionCamera()
+    {
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+
+        Collection<GeoItem> items = mClusterManager.getAlgorithm().getItems();
+
+
+        for (GeoItem item : items)
+        {
+            builder.include(item.getPosition());
+            Log.d("ff","negro");
+        }
+
+        try
+        {
+            LatLngBounds llb = builder.build();
+            mMap.moveCamera(CameraUpdateFactory.newLatLngBounds(llb, 120));
+        }
+        catch (Exception e)
+        {e.printStackTrace();}
     }
 
     @Override
