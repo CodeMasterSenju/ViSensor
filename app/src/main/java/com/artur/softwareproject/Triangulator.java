@@ -1,7 +1,20 @@
 package com.artur.softwareproject;
 
-/**
- * Created by gabriel on 05.06.17.
+/*
+ *	ported from p bourke's triangulate.c
+ *	http://astronomy.swin.edu.au/~pbourke/terrain/triangulate/triangulate.c
+ *
+ *	fjenett, 20th february 2005, offenbach-germany.
+ *	contact: http://www.florianjenett.de/
+ *
+ *  adapted by gabriel scheibler
+ *
+ *  run like this:
+ *  	javac *.java
+ *  	java triangulate
+ *
+ *	to view the output: http://processing.org/
+ *
  */
 
 class ITRIANGLE
@@ -333,6 +346,12 @@ public class Triangulator
         return ntri;
     }
 
+    /**
+     * Takes up to 1000 points and creates Triangle Mesh by using Delaunay triangulation
+     *
+     * @param points the points, sorted by x-value increasing
+     * @return An Array of Triangles, each given in clockwise order
+     */
     public Vector3D[][] triangulate(Vector3D[] points)
     {
         int nv = points.length;
@@ -341,7 +360,7 @@ public class Triangulator
         XYZ[] inpoints = new XYZ[nv + 3];
 
         for (int i = 0; i < nv; i++)
-            inpoints[i] = new XYZ(points[i].x, points[i].z, points[i].y);
+            inpoints[i] = new XYZ(points[i].x, points[i].z, 0);
 
         inpoints[nv + 0] = new XYZ(0, 0, 0);
         inpoints[nv + 1] = new XYZ(0, 0, 0);
@@ -358,9 +377,9 @@ public class Triangulator
 
         for (int i = 0; i < ntri; i++)
         {
-            ret[i][0] = new Vector3D(inpoints[triangles[i].p1].x, inpoints[triangles[i].p1].z, inpoints[triangles[i].p1].y);
-            ret[i][1] = new Vector3D(inpoints[triangles[i].p2].x, inpoints[triangles[i].p2].z, inpoints[triangles[i].p2].y);
-            ret[i][2] = new Vector3D(inpoints[triangles[i].p3].x, inpoints[triangles[i].p3].z, inpoints[triangles[i].p3].y);
+            ret[i][0] = new Vector3D(points[triangles[i].p1].x, points[triangles[i].p1].z, points[triangles[i].p1].y);
+            ret[i][1] = new Vector3D(points[triangles[i].p2].x, points[triangles[i].p2].z, points[triangles[i].p2].y);
+            ret[i][2] = new Vector3D(points[triangles[i].p3].x, points[triangles[i].p3].z, points[triangles[i].p3].y);
         }
 
         return ret;

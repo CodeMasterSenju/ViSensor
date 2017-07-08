@@ -39,8 +39,21 @@ public class VRmenu extends AppCompatActivity{
         setContentView(R.layout.activity_vr_menu);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
         sessionFileList = new ArrayList<>();
-        for (String s : pathName.list())
-            sessionFileList.add(s);
+
+        String[] filenames = getIntent().getStringArrayExtra(EXTRA_FILES);
+
+        if(filenames == null)
+        {
+            for (String s : pathName.list())
+                sessionFileList.add(s);
+        }
+        else
+        {
+            for (String s : filenames)
+                sessionFileList.add(s);
+        }
+
+
 
         //SimpleWebServer simpleWebServer = new SimpleWebServer(8080, this.getAssets());
         //simpleWebServer.start();
