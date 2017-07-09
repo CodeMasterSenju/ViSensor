@@ -57,8 +57,32 @@ public class Main extends AppCompatActivity {
     private RecordService rService;
     private boolean rBound;
 
-
-
+//    private static final String SERVICE_INTENT_STATE = "serIntSt";
+//    private static final String POSITION_SERVICE_INTENT_STATE = "posSerIntSt";
+//    private static final String RECORDING_STATE = "rcrdSt";
+//    private static final String CURRENT_TIME_STATE = "currTimeSt";
+//    private static final String DISCONNECT_STATE = "disconSt";
+//    private static final String MODEL_CONSTRUCTED_STATE = "modConstSt";
+//    private static final String PD_STATE = "pdSt";
+//    private static final String GPS_STATUS_STATE = "gpsStatSt";
+//    private static final String SDISCONNECT_THREAD_STATE = "disconThrSt";
+//    private static final String RECORD_sERVICE_STATE = "recServSt";
+//    private static final String RBOUND_STATE = "rBoundSt";
+//
+//    @Override
+//    public void onSaveInstanceState(Bundle savedInstanceState) {
+//        savedInstanceState.putBoolean(RECORDING_STATE, recording);
+//        savedInstanceState.putLong(CURRENT_TIME_STATE, currentTime);
+//        savedInstanceState.putInt(DISCONNECT_STATE, disconnect);
+//        savedInstanceState.putInt(MODEL_CONSTRUCTED_STATE, modelConstructed);
+//        savedInstanceState.putBoolean(GPS_STATUS_STATE, gpsStatus);
+//        savedInstanceState.putBoolean(RBOUND_STATE, rBound);
+//        savedInstanceState.put
+//
+//
+//
+//        super.onSaveInstanceState(savedInstanceState);
+//    }
 
 
     @Override
