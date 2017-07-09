@@ -1,3 +1,21 @@
+/**Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.app.Service;
@@ -88,7 +106,6 @@ public class RecordService extends Service implements Runnable{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        record = false;
     }
 
 //BroadcastReceiver=================================================================================
@@ -127,7 +144,7 @@ public class RecordService extends Service implements Runnable{
                         Log.d(TAG, "Failed to create a new json file.");
                     BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
                     writer.write(   "{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[0] + ",\n" +
-                            "\"longitude\": " + gpsStartingPos[1] + "\n},\n{\"session\": [\n");
+                            "\"longitude\": " + gpsStartingPos[1] + "\n},\n\"session\": [\n");
                     writer.close();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -273,6 +290,7 @@ public class RecordService extends Service implements Runnable{
     }
 
     public int create3dModel() {
+        record = false;
         Log.d(TAG, "About to call modelConstructor");
         double[][] posArray = new double[3][positionList.size()];
         posArray = positionList.toArray(posArray);
