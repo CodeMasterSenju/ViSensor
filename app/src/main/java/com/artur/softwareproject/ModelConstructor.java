@@ -829,7 +829,7 @@ public class ModelConstructor
 
 
 
-            /*
+
             //render back-side of every plane
             p = planes[i];
             ts = "f ";
@@ -839,7 +839,7 @@ public class ModelConstructor
                 ts += p[j - 2] + "/" + p[j] + "/" + p[j - 1] + " ";
             }
             ts += "\n";
-            s += ts;*/
+            s += ts;
         }
 
         return s;
