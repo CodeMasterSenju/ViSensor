@@ -227,6 +227,8 @@ public class Main extends AppCompatActivity {
 
                     item.setIcon(R.drawable.ic_action_stop);
                     Toast.makeText(getApplicationContext(), "Start recording data", Toast.LENGTH_LONG).show();
+
+                    currentTime = System.currentTimeMillis();
                     recordClock.setVisibility(View.VISIBLE);
 
 
@@ -234,7 +236,6 @@ public class Main extends AppCompatActivity {
                     TextView tv = (TextView) findViewById(R.id.recordClock);
                     tv.startAnimation(a);
 
-                    currentTime = System.currentTimeMillis();
                     recording = true;
 
                     if (!rBound) {

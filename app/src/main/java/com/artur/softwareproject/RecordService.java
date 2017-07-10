@@ -143,8 +143,8 @@ public class RecordService extends Service implements Runnable{
                     if(!jsonFile.createNewFile())
                         Log.d(TAG, "Failed to create a new json file.");
                     BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-                    writer.write(   "{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[0] + ",\n" +
-                            "\"longitude\": " + gpsStartingPos[1] + "\n},\n\"session\": [\n");
+                    writer.write(   "{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[1] + ",\n" +
+                            "\"longitude\": " + gpsStartingPos[0] + "\n},\n\"session\": [\n");
                     writer.close();
                 } catch (IOException e) {
                     e.printStackTrace();
