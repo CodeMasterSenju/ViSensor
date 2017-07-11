@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.app.Service;
@@ -30,10 +48,8 @@ public class GpsService extends Service implements LocationListener, Runnable {
     //formalities
     private LocationManager gpsManager;
     private Handler gpsStatusHandler = new Handler();
-    private Thread gpsStatusThread;
 
-
-    //onDestroy=========================================================================================
+//onDestroy=========================================================================================
     @Override
     public void onDestroy() {
         gpsManager = null;
@@ -84,7 +100,7 @@ public class GpsService extends Service implements LocationListener, Runnable {
         checkPermission("android.permission.ACCESS_FINE_LOCATION",1,0);
         gpsManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 
-        gpsStatusThread = new Thread(this);
+        Thread gpsStatusThread = new Thread(this);
         gpsStatusThread.start();
     }
 
@@ -125,8 +141,6 @@ public class GpsService extends Service implements LocationListener, Runnable {
 
         gpsStatusHandler.postDelayed(this, 1000);
     }
-
-
 }
 
 //EOF

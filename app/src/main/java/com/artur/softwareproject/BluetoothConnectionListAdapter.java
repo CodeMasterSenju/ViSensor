@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.app.Activity;
@@ -6,6 +24,7 @@ import android.bluetooth.BluetoothDevice;
 import android.content.*;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,6 +35,7 @@ import android.view.animation.Animation;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 import static android.os.SystemClock.sleep;
@@ -25,7 +45,7 @@ import static android.os.SystemClock.sleep;
  * This is a list of available bluetooth devices.
  */
 
-public class BluetoothConnectionListAdapter extends ArrayAdapter {
+class BluetoothConnectionListAdapter extends ArrayAdapter<String> {
 
     private ArrayList<String> bluetoothAddress;
     private ArrayList<String> bluetoothName;
@@ -35,13 +55,12 @@ public class BluetoothConnectionListAdapter extends ArrayAdapter {
     private Intent mainIntent;
     private int connected;
     private Thread connectThread;
-
-    public TextView bluetoothConnectionName;
-    public TextView bluetoothConnectionStatus;
+    private ProgressDialog connectDialog;
+    private final BluetoothConnectionListAdapter bclaReference = this;
 
     private static final String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
 
-    public BluetoothConnectionListAdapter(Activity context, ArrayList<String> bluetoothAddress, ArrayList<String> bluetoothName, ArrayList<BluetoothDevice> bDevices){
+    BluetoothConnectionListAdapter(Activity context, ArrayList<String> bluetoothAddress, ArrayList<String> bluetoothName, ArrayList<BluetoothDevice> bDevices){
         super(context, R.layout.activity_bluetooth_connection, bluetoothAddress);
         this.bluetoothAddress = bluetoothAddress;
         this.bluetoothName = bluetoothName;
@@ -50,82 +69,126 @@ public class BluetoothConnectionListAdapter extends ArrayAdapter {
         connected = 0;
         this.intent = new Intent();
 
+        BroadcastReceiver connectedReceive = new BroadcastReceiver(){
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                connected = (int)intent.getExtras().get("connected");
+                Log.d(TAG, "RECEIVE : " + connected);
+            }
+        };
         LocalBroadcastManager.getInstance(context).registerReceiver(connectedReceive, new IntentFilter("connectedFilter"));
     }
 
-    private BroadcastReceiver connectedReceive = new BroadcastReceiver(){
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            connected = (int)intent.getExtras().get("connected");
-            Log.d(TAG, "RECEIVE : " + connected);
-        }
-    };
-
-    public int getConnected()
+    private int getConnected()
     {
         return connected;
     }
 
-    @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-        LayoutInflater ListInflater = LayoutInflater.from(getContext());
-        View customView = ListInflater.inflate(R.layout.bluetooth_list_pattern, parent, false);
+    private static class ViewHolder {
+        private TextView bluetoothConnectionName;
+        private TextView bluetoothConnectionStatus;
+    }
 
-        bluetoothConnectionName = (TextView) customView.findViewById(R.id.bluetooth_connection_name);
-        bluetoothConnectionName.setText(bluetoothAddress.get(position));
+    private static class ConnectionHandlerClass extends Handler {
+        private final WeakReference<BluetoothConnectionListAdapter> mTarget;
 
-        bluetoothConnectionStatus = (TextView) customView.findViewById(R.id.bluetooth_connection_status);
-        bluetoothConnectionStatus.setText(bluetoothName.get(position));
+        ConnectionHandlerClass(BluetoothConnectionListAdapter context) {
+            mTarget = new WeakReference<>(context);
+        }
 
-        customView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                //What happens if you press on the list items at the bluetooth activity.
-                Animation animation = new AlphaAnimation(0.3f, 1.0f);
-                animation.setDuration(1000);
-                v.startAnimation(animation);
+        @Override
+        public void handleMessage (Message msg) {
+            super.handleMessage(msg);
+            BluetoothConnectionListAdapter target = mTarget.get();
+            target.connectDialog.dismiss();
+            target.mainIntent = new Intent(target.contextActivity, Main.class);
 
-                intent = new Intent(contextActivity, BluetoothService.class);
-                intent.putExtra("device", bDevices.get(position));
-                intent.putExtra("deviceList", bDevices);
-                contextActivity.startService(intent);
+            target.contextActivity.startActivity(target.mainIntent);
+            target.connectThread.interrupt();
+            target.connected = 0;
+            Log.d(TAG, "THREAD INTERRUPTED " + target.connectThread.getState());
+            target.contextActivity.finish();
+            Log.d(TAG, "BIS HIER.");
+        }
+    }
 
-                final ProgressDialog connectingDialog = new ProgressDialog(contextActivity);
-                connectingDialog.setMessage("Connecting...");
-                connectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                connectingDialog.show();
+    @Override @NonNull
+    public View getView(final int position, View convertView, @NonNull ViewGroup parent) {
+        ViewHolder mViewHolder;
 
-                final Handler handler = new Handler(){
-                    @Override
-                    public void handleMessage(Message msg) {
-                        Log.d(TAG, "MESSAGE RECEIVED");
-                        connectingDialog.dismiss();
-                        mainIntent = new Intent(contextActivity, Main.class);
-                        contextActivity.startActivity(mainIntent);
-                        connectThread.interrupt();
-                        connected = 0;
-                        Log.d(TAG, "THREAD INTERRUPTED " + connectThread.getState());
-                        contextActivity.finish();
-                    }
-                };
+        if (convertView == null) {
 
-                connectThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int stop = 0;
-                        while(stop == 0) {
-                            stop = getConnected();
-                            sleep(2000);
+            mViewHolder = new ViewHolder();
+            LayoutInflater ListInflater = LayoutInflater.from(getContext());
+            convertView = ListInflater.inflate(R.layout.bluetooth_list_pattern, parent, false);
+
+            mViewHolder.bluetoothConnectionName = (TextView) convertView.findViewById(R.id.bluetooth_connection_name);
+            mViewHolder.bluetoothConnectionStatus = (TextView) convertView.findViewById(R.id.bluetooth_connection_status);
+
+
+            convertView.setTag(mViewHolder);
+
+            //final ConnectionHandlerClass connectHandler = new ConnectionHandlerClass(this);
+
+            convertView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    //What happens if you press on the list items at the bluetooth activity.
+                    Animation animation = new AlphaAnimation(0.3f, 1.0f);
+                    animation.setDuration(1000);
+                    v.startAnimation(animation);
+
+                    intent = new Intent(contextActivity, BluetoothService.class);
+                    intent.putExtra("device", bDevices.get(position));
+                    intent.putExtra("deviceList", bDevices);
+                    contextActivity.startService(intent);
+
+                    final ProgressDialog connectingDialog = new ProgressDialog(contextActivity);
+                    connectDialog = connectingDialog;
+                    connectingDialog.setMessage("Connecting...");
+                    connectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    connectingDialog.setCancelable(false);
+                    connectingDialog.show();
+
+                    final ConnectionHandlerClass connectHandler = new ConnectionHandlerClass(bclaReference);
+
+//                    final Handler connectHandler = new Handler() {
+//                        @Override
+//                        public void handleMessage(Message msg) {
+//                            Log.d(TAG, "MESSAGE RECEIVED");
+//                            connectingDialog.dismiss();
+//                            mainIntent = new Intent(contextActivity, Main.class);
+//                            contextActivity.startActivity(mainIntent);
+//                            connectThread.interrupt();
+//                            connected = 0;
+//                            Log.d(TAG, "THREAD INTERRUPTED " + connectThread.getState());
+//                            contextActivity.finish();
+//                        }
+//                    };
+
+                    connectThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            int stop = 0;
+                            while (stop == 0) {
+                                stop = getConnected();
+                                sleep(2000);
+                            }
+                            connectHandler.sendEmptyMessage(0);
                         }
-                        handler.sendEmptyMessage(0);
-                    }
-                });
+                    });
 
-                connectThread.start();
-            }
-        });
+                    connectThread.start();
+                }
+            });
+        } else {
+            mViewHolder = (ViewHolder) convertView.getTag();
+        }
 
-        return customView;
+        mViewHolder.bluetoothConnectionName.setText(bluetoothAddress.get(position));
+        mViewHolder.bluetoothConnectionStatus.setText(bluetoothName.get(position));
+
+        return convertView;
     }
 }
 

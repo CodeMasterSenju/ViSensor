@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.app.Service;
@@ -37,7 +55,6 @@ public class BluetoothService extends Service{
     private final UUID UUID_OPT_CONF = fromString("f000aa72-0451-4000-b000-000000000000"); // 0: disable, 1: enable
 
     private BluetoothGatt mBluetoothGatt;
-    private BluetoothDevice bDevice;
     private Intent serviceIntent;
     private int init;
 
@@ -61,8 +78,10 @@ public class BluetoothService extends Service{
 
         if(intent != null)
         {
+            BluetoothDevice bDevice;
             bDevice = (BluetoothDevice)intent.getExtras().get("device");
-            mBluetoothGatt = bDevice.connectGatt(this, false, mGattCallback);
+            if (bDevice != null)
+                mBluetoothGatt = bDevice.connectGatt(this, false, mGattCallback);
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -86,29 +105,22 @@ public class BluetoothService extends Service{
                 public void onConnectionStateChange(BluetoothGatt gatt, int status,
                                                     int newState) {
 
-                    if(newState == BluetoothProfile.STATE_CONNECTING)
-                    {
+                    Intent mainIntent = new Intent();
+                    switch (newState) {
+                        case BluetoothProfile.STATE_CONNECTED:
+                            mainIntent.putExtra("connected", 1);
+                            mainIntent.setAction("connectedFilter");
+                            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+                            mBluetoothGatt.discoverServices();
+                            break;
 
-                    }
-                    else if(newState == BluetoothProfile.STATE_CONNECTED)
-                    {
-                        Intent mainIntent = new Intent();
-                        mainIntent.putExtra("connected", 1);
-                        mainIntent.setAction("connectedFilter");
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
-
-                        mBluetoothGatt.discoverServices();
-                    }
-                    else if(newState == BluetoothProfile.STATE_DISCONNECTING)
-                    {
-
-                    }
-                    else if(newState == BluetoothProfile.STATE_DISCONNECTED)
-                    {
-                        Intent mainIntent = new Intent();
-                        mainIntent.putExtra("disconnect", 1);
-                        mainIntent.setAction("disconnectFilter");
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+                        case BluetoothProfile.STATE_DISCONNECTED:
+                            mainIntent.putExtra("disconnect", 1);
+                            mainIntent.setAction("disconnectFilter");
+                            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+                            break;
+                        default:
+                            break;
                     }
                 }
 

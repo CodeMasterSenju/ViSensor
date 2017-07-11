@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 /**
@@ -5,20 +23,27 @@ package com.artur.softwareproject;
  * A simple Kalman-Filter that is very good at filtering out noise.
  */
 
-public class SimpleKalmanFilter {
+class SimpleKalmanFilter {
     /*
-   Filterparameter
-   xk:   aktuelle Schätzung
-   xk_1: vergangene Schätzung
-   pk:   aktuelle Fehlerkovarianz
-   pk_1: vergangene Fehlerkovarianz
+   Filter parameters
+   xk:   current guess
+   xk_1: last guess
+   pk:   current error covariance
+   pk_1: last error covariance
    kk:   Kalman Gain
-   stddeviation: Standartabweichung des Sensors
+   stddeviation: standard deviation of the sensor
     */
     private double xk, xk_1, pk, pk_1, kk, measurementNoise, processNoise;
     private boolean first;
 
-    public SimpleKalmanFilter(double stddev, double pNoise)
+    /**
+     * Initialize the Kalman Filter.
+     *
+     * @param stddev        standard deviation of the sensor
+     * @param pNoise        process noise
+     */
+
+    SimpleKalmanFilter(double stddev, double pNoise)
     {
         xk = 0;
         xk_1 = 0;
@@ -30,7 +55,14 @@ public class SimpleKalmanFilter {
         first = true;
     }
 
-    public double output(double input)
+    /**
+     * Filter a signal.
+     *
+     * @param input Unfiltered signal coming from the sensor
+     * @return The filtered signal.
+     */
+
+    double output(double input)
     {
         xk_1 = xk;
         pk_1 = pk + processNoise;
@@ -39,7 +71,7 @@ public class SimpleKalmanFilter {
         xk = xk + kk * (input - xk);
         pk = (1-kk) * pk_1;
 
-        if (first) {
+        if (first) { //The first input bypasses the filter. This way other variables further down the line can be initialized with non zero values.
             first = false;
             return input;
         }
@@ -47,3 +79,5 @@ public class SimpleKalmanFilter {
         return xk_1;
     }
 }
+
+//EOF

@@ -1,9 +1,22 @@
-package com.artur.softwareproject;
-
-/**
- * Created by artur_000 on 01.05.2017.
- * This Activity shows all data in real time. It also offers a button to recording the data.
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+package com.artur.softwareproject;
 
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -22,17 +35,21 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.ref.WeakReference;
+import java.util.Locale;
 import static android.os.SystemClock.sleep;
 
+/**
+ * Created by artur_000 on 01.05.2017.
+ * This Activity shows all data in real time. It also offers a button to recording the data.
+ */
 
 public class Main extends AppCompatActivity {
 
@@ -50,12 +67,13 @@ public class Main extends AppCompatActivity {
     private boolean recording = false;
     private long currentTime;
     private int disconnect;
-    private int modelConstructed;
+    private boolean modelConstructed;
     private ProgressDialog pd;
     private boolean gpsStatus; //false: unavailable, true: available
     private Thread disconnectThread;
     private RecordService rService;
     private boolean rBound;
+    private ProgressDialog disconDialog;
 
 //    private static final String SERVICE_INTENT_STATE = "serIntSt";
 //    private static final String POSITION_SERVICE_INTENT_STATE = "posSerIntSt";
@@ -97,7 +115,7 @@ public class Main extends AppCompatActivity {
         adapter = new SensorDataListAdapter(this, dataTypes, dataUnits);
         sensorDataList.setAdapter(adapter);
         disconnect = 0;
-        modelConstructed = 0;
+        modelConstructed = false;
 
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(disconnectReceive, new IntentFilter("disconnectFilter"));
 
@@ -121,7 +139,7 @@ public class Main extends AppCompatActivity {
             int seconds = (int) (millis / 1000);
             int minutes = seconds / 60;
             seconds = seconds % 60;
-            recordClock.setText(String.format("Recorded time : " + "%02d:%02d", minutes, seconds));
+            recordClock.setText(String.format(Locale.GERMANY, "Recorded time : " + "%02d:%02d", minutes, seconds));
             updateHandler.postDelayed(this, 500); //run every half a second
         }
     };
@@ -179,8 +197,31 @@ public class Main extends AppCompatActivity {
 //==================================================================================================
 //==================================================================================================
 
+    private static class DisconnectHandlerClass extends Handler{
+        private final WeakReference<Main> mTarget;
+
+        DisconnectHandlerClass(Main context) {
+            mTarget = new WeakReference<>(context);
+        }
+
+        @Override
+        public void handleMessage (Message msg) {
+            super.handleMessage(msg);
+            Main target = mTarget.get();
+            target.disconDialog.dismiss();
+            target.disconnectThread.interrupt();
+            Intent bluetoothIntent = new Intent(target, BluetoothConnectionList.class);
+            target.startActivity(bluetoothIntent);
+            target.finish();
+        }
+    }
+
+//==================================================================================================
+//==================================================================================================
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+
         switch (item.getItemId()) {
             case R.id.disconnect:
                 stopService(serviceIntent);
@@ -188,18 +229,23 @@ public class Main extends AppCompatActivity {
                 final ProgressDialog disconnectingDialog = new ProgressDialog(Main.this);
                 disconnectingDialog.setMessage("Disconnecting...");
                 disconnectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                disconnectingDialog.setCancelable(false);
                 disconnectingDialog.show();
+                disconDialog = disconnectingDialog;
 
-                final Handler disconnectHandler = new Handler(){
-                    @Override
-                    public void handleMessage(Message msg) {
-                        disconnectingDialog.dismiss();
-                        disconnectThread.interrupt();
-                        Intent bluetoothIntent = new Intent(Main.this, BluetoothConnectionList.class);
-                        Main.this.startActivity(bluetoothIntent);
-                        Main.this.finish();
-                    }
-                };
+
+                final DisconnectHandlerClass disconnectHandler = new DisconnectHandlerClass(this);
+
+//                final Handler disconnectHandler = new Handler(){
+//                    @Override
+//                    public void handleMessage(Message msg) {
+//                        disconnectingDialog.dismiss();
+//                        disconnectThread.interrupt();
+//                        Intent bluetoothIntent = new Intent(Main.this, BluetoothConnectionList.class);
+//                        Main.this.startActivity(bluetoothIntent);
+//                        Main.this.finish();
+//                    }
+//                };
 
                 disconnectThread = new Thread(new Runnable() {
                     @Override
@@ -326,9 +372,9 @@ public class Main extends AppCompatActivity {
                 recordClock.setVisibility(View.GONE);
                 recording = false;
 
-                if (modelConstructed == 1)
+                if (modelConstructed)
                     Toast.makeText(getApplicationContext(), "Recording stopped.\n3D model created.", Toast.LENGTH_LONG).show();
-                else if (modelConstructed == -1)
+                else
                     Toast.makeText(getApplicationContext(), "Recording stopped.\n3D model creation failed.", Toast.LENGTH_LONG).show();
 
             }
@@ -336,10 +382,10 @@ public class Main extends AppCompatActivity {
         task.execute((Void[])null);
 
     }
-/**The following code was originally used to stop the record service. It worked just fine with the
- * exception of a progress indicator. Deep going changes were needed to make the progress indicator work.
- * This code is left as a reference.
-  */
+/*The following code was originally used to stop the record service. It worked just fine with the
+  exception of a progress indicator. Deep going changes were needed to make the progress indicator work.
+  This code is left as a reference.*/
+
 //    private void stopRecording() {
 //        final ProgressDialog modelConstructorDialog = new ProgressDialog(Main.this);
 //        modelConstructorDialog.setMessage("Constructing 3D model...");

@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.content.Intent;
@@ -17,9 +35,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
-import com.google.android.gms.maps.model.Marker;
 import com.google.maps.android.clustering.Cluster;
-import com.google.maps.android.clustering.ClusterItem;
 import com.google.maps.android.clustering.ClusterManager;
 import com.google.maps.android.clustering.algo.NonHierarchicalDistanceBasedAlgorithm;
 
@@ -30,7 +46,11 @@ import java.util.Collection;
 
 import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
 
-public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, ClusterManager.OnClusterClickListener, ClusterManager.OnClusterItemClickListener, ClusterManager.OnClusterItemInfoWindowClickListener, ClusterManager.OnClusterInfoWindowClickListener
+public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback,
+                                                            ClusterManager.OnClusterClickListener<GeoItem>,
+                                                            ClusterManager.OnClusterItemClickListener<GeoItem>,
+                                                            ClusterManager.OnClusterItemInfoWindowClickListener<GeoItem>,
+                                                            ClusterManager.OnClusterInfoWindowClickListener<GeoItem>
 {
 
     private GoogleMap mMap;
@@ -45,7 +65,10 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vrmenu_map);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
+        if (getSupportActionBar() != null)
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -106,7 +129,7 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
 
         // Initialize the manager with the context and the map.
         // (Activity extends context, so we can pass 'this' in the constructor.)
-        mClusterManager = new ClusterManager<GeoItem>(this, mMap);
+        mClusterManager = new ClusterManager<>(this, mMap);
 
         mClusterManager.setAlgorithm(new NonHierarchicalDistanceBasedAlgorithm<GeoItem>());
         mClusterManager.setRenderer(new CustomClusterRenderer(this, mMap, mClusterManager));
@@ -171,13 +194,13 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
     @Override
     public boolean onClusterClick(Cluster cluster)
     {
-        return false; // default onclusterclicked is called after
+        return false; // default onClusterClicked is called after
     }
 
     @Override
-    public boolean onClusterItemClick(ClusterItem clusterItem)
+    public boolean onClusterItemClick(GeoItem clusterItem)
     {
-        return  false;  // default onclusterItemclicked is called after
+        return  false;  // default onClusterItemClicked is called after
     }
 
     private LatLng getLatLng(File f)
@@ -204,17 +227,18 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
                     reader.beginObject();
                     while (reader.hasNext() && reader.peek() == JsonToken.NAME)
                     {
-                        String name1 = reader.nextName();
-                        if (name1.equals("latitude"))
-                        {
-                            lat = reader.nextDouble();
-                        } else if (name1.equals("longitude"))
-                        {
-                            lng = reader.nextDouble();
-                        } else
-                        {
-                            reader.skipValue();
+                        switch (reader.nextName()) {
+                            case "latitude":
+                                lat = reader.nextDouble();
+                                break;
+                            case "longitude":
+                                lng = reader.nextDouble();
+                                break;
+                            default:
+                                reader.skipValue();
+                                break;
                         }
+
                     }
                     return new LatLng(lat, lng);
                 }
@@ -228,12 +252,12 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         {
             e.printStackTrace();
             Log.d("Failed", "Error reading coordinates from json file");
-            return new LatLng(51.5145160, -0.1270060);
+            return new LatLng(51.5145160, -0.1270060);//Brasserie Max - London
         }
     }
 
     @Override
-    public void onClusterInfoWindowClick(Cluster cluster)
+    public void onClusterInfoWindowClick(Cluster<GeoItem> cluster)
     {
         String[] filenames = new String[cluster.getSize()];
         Collection<GeoItem> items = cluster.getItems();
@@ -244,21 +268,21 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
             i++;
         }
 
-        //Start VRmenu with the selected datasets
+        //Start VRmenu with the selected dataSets
         Intent vrIntent = new Intent(this, VRmenu.class);
         vrIntent.putExtra(EXTRA_FILES, filenames);
         VRmenuMap.this.startActivity(vrIntent);
     }
 
     @Override
-    public void onClusterItemInfoWindowClick(ClusterItem clusterItem)
+    public void onClusterItemInfoWindowClick(GeoItem clusterItem)
     {
-        //start Webserver
+        //start web server
         Intent webServerIntent = new Intent(this, SimpleWebServer.class);
         startService(webServerIntent);
 
         //start vr visualisation of the selected dataset in chrome
-        String fileName = ((GeoItem) clusterItem).getFilename();
+        String fileName = clusterItem.getFilename();
 
         String json = fileName.split("\\.")[0];
 
@@ -274,3 +298,5 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback, 
         startActivity(webVRIntent);
     }
 }
+
+//EOF
