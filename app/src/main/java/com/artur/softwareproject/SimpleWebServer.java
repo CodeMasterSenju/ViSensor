@@ -42,8 +42,6 @@ import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
-import android.widget.Toast;
-
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -108,11 +106,11 @@ public class SimpleWebServer extends Service implements Runnable {
         }
     }
 
-    public int getPort() {
-        return mPort;
-    }
-
-    public boolean getRunning() { return mIsRunning; }
+//    public int getPort() {
+//        return mPort;
+//    }
+//
+//    public boolean getRunning() { return mIsRunning; }
 
     @Override
     public void run() {
@@ -134,7 +132,7 @@ public class SimpleWebServer extends Service implements Runnable {
      * Respond to a request from a client.
      *
      * @param socket The client socket.
-     * @throws IOException
+     * @throws IOException "please put here a description, Jean"
      */
     private void handle(Socket socket) throws IOException {
         BufferedReader reader = null;
@@ -200,7 +198,7 @@ public class SimpleWebServer extends Service implements Runnable {
      *
      * @param fileName The name of the file.
      * @return The content of the file.
-     * @throws IOException
+     * @throws IOException "please put here a description, too, Jean"
      */
     private byte[] loadContent(String fileName) throws IOException {
         InputStream input = null;
@@ -277,7 +275,7 @@ public class SimpleWebServer extends Service implements Runnable {
         mPort = 8080;
         mAssets = this.getAssets();
         start();
-        Toast.makeText(this, "Service Started", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "Service started");
         return START_STICKY;
     }
 
@@ -285,6 +283,8 @@ public class SimpleWebServer extends Service implements Runnable {
     public void onDestroy() {
         stop();
         super.onDestroy();
-        Toast.makeText(this, "Service Destroyed", Toast.LENGTH_LONG).show();
+        Log.d(TAG, "Service stopped");
     }
 }
+
+//EOF

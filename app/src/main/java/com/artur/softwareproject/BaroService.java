@@ -1,4 +1,4 @@
-/**Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
  *
  * This file is part of ViSensor.
  *
@@ -18,11 +18,6 @@
 
 package com.artur.softwareproject;
 
-/**
- * Created by Martin Kern on 15.05.2017.
- * This Service gets the data from the barometer.
- */
-
 import android.app.Service;
 import android.content.Intent;
 import android.hardware.Sensor;
@@ -31,6 +26,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
+
+/**
+ * Created by Martin Kern on 15.05.2017.
+ * This Service gets the data from the barometer.
+ */
 
 public class BaroService extends Service implements SensorEventListener {
 

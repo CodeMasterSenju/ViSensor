@@ -1,13 +1,28 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
-import android.app.Activity;
-import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.ComponentName;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
-import android.support.v4.app.FragmentActivity;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,45 +30,55 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
-
 import java.io.File;
 import java.util.ArrayList;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 
-public class VRmenuAdapter extends ArrayAdapter {
+
+class VRmenuAdapter extends ArrayAdapter<String> {
 
     private static final String TAG = VRmenuAdapter.class.getSimpleName();
 
     private ArrayList<String> fileNames;
-    //private String[] fileNames;
     private AppCompatActivity context;
-    private TextView sessionName;
-    private TextView sessionCount;
     private File jsonForDelete, objForDelete;
     private int currentPosition;
-    private static final String ALLOWED_URI_CHARS = "=?";
 
-
-    public VRmenuAdapter(AppCompatActivity context, ArrayList<String> fileNames){
+    VRmenuAdapter(AppCompatActivity context, ArrayList<String> fileNames){
         super(context, R.layout.vr_menu_list_pattern, fileNames);
         this.fileNames = fileNames;
         this.context = context;
         currentPosition = 0;
     }
 
-    @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-        LayoutInflater ListInflater = LayoutInflater.from(getContext());
-        View customView = ListInflater.inflate(R.layout.vr_menu_list_pattern, parent, false);
+    private static class VrViewHolder {
+        private TextView sessionName;
+        private TextView sessionCount;
+    }
 
-        sessionName = (TextView) customView.findViewById(R.id.sessionName);
-        sessionCount = (TextView) customView.findViewById(R.id.sessionCount);
+    @Override @NonNull
+    public View getView(final int position, View convertView, @NonNull ViewGroup parent) {
+        VrViewHolder mVrViewHolder;
 
-        sessionCount.setText("Session " + (position+1));
-        sessionName.setText(fileNames.get(position));
+        if (convertView == null) {
+            mVrViewHolder = new VrViewHolder();
 
-        customView.setOnClickListener(new View.OnClickListener() {
+            LayoutInflater ListInflater = LayoutInflater.from(getContext());
+            convertView = ListInflater.inflate(R.layout.vr_menu_list_pattern, parent, false);
+
+            mVrViewHolder.sessionName = (TextView) convertView.findViewById(R.id.sessionName);
+            mVrViewHolder.sessionCount = (TextView) convertView.findViewById(R.id.sessionCount);
+
+            convertView.setTag(mVrViewHolder);
+        } else {
+            mVrViewHolder = (VrViewHolder) convertView.getTag();
+        }
+
+
+        String sessionNo = "Session " + (position+1);
+        mVrViewHolder.sessionCount.setText(sessionNo);
+        mVrViewHolder.sessionName.setText(fileNames.get(position));
+
+        convertView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -86,7 +111,7 @@ public class VRmenuAdapter extends ArrayAdapter {
         });
 
         //Used to delete files.
-        customView.setOnLongClickListener(new View.OnLongClickListener() {
+        convertView.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -100,24 +125,28 @@ public class VRmenuAdapter extends ArrayAdapter {
             }
         });
 
-        return customView;
+        return convertView;
     }
 
-    public void showDelDialog() {
+    private void showDelDialog() {
         DialogFragment delDialog = new FileDeleteDialog();
         notifyDataSetChanged();
         delDialog.show(context.getFragmentManager(), "FileDeleteDialog");
 
     }
 
-    public void onDialogPositiveClick() {
+    void onDialogPositiveClick() {
         Log.d(TAG, "VRmenuAdapter onPositiveClick: Check.");
 
-        if (jsonForDelete.exists())//delete json file
-            jsonForDelete.delete();
+        if (jsonForDelete.exists()) {//delete json file
+            if (!jsonForDelete.delete())
+                Log.d(TAG, "Deleting json file failed.");
+        }
 
-        if (objForDelete.exists())//delete obj file
-            objForDelete.delete();
+        if (objForDelete.exists()) {//delete obj file
+            if (!objForDelete.delete())
+                Log.d(TAG, "Deleting obj file failed.");
+        }
 
         remove(getItem(currentPosition));
         notifyDataSetChanged();
