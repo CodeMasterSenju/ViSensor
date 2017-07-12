@@ -9,6 +9,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
 
 import static android.os.SystemClock.sleep;
@@ -96,12 +98,15 @@ public class ModelConstructor
 
         Vector3D s = new Vector3D(0, maxY, 0);
 
+
+        // Adjust vertical position of model.
         for (int i = 0; i < size; i++)
         {
-            vectors[i] = vectors[i].sub(s);
+            //vectors[i] = vectors[i].sub(s);
             if (flatGround)
                 vectors[i].y = 0;
         }
+
 
         return vectors;
     }
@@ -283,10 +288,10 @@ public class ModelConstructor
         }
 
 
-        Vector3D v1 = null;
-        Vector3D v2 = null;
-        Vector3D e = null;
-        Vector3D n = null;
+        Vector3D v1;
+        Vector3D v2;
+        Vector3D e;
+        Vector3D n;
         Vector3D avg = getAverage(v);
 
         for (int i = 0; i < v.length; i++)// find direction in which each vector should be moved
@@ -671,7 +676,7 @@ public class ModelConstructor
      */
     public static void buildFloor(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D[] surroundingPoints, Vector3D[] vectors, boolean flatGround)
     {
-        double extraSpace = 5000;
+        double extraSpace = 2000;
         double textureconstant = 10;
         ArrayList<int[]> floorplanes = new ArrayList<>();
 
@@ -681,6 +686,7 @@ public class ModelConstructor
         {
             ArrayList<Vector3D> floorPoints = new ArrayList<>();
 
+            // Add distant points
             for (int i = 0; i < surroundingPoints.length; i++)
             {
                 Vector3D ni = surroundingPoints[i].sub(avg);

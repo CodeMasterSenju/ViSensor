@@ -196,6 +196,7 @@ public class Triangulator
         dx = xmax - xmin;
         dy = ymax - ymin;
         dmax = (dx > dy) ? dx : dy;
+        dmax = dmax * 10;
         xmid = (xmax + xmin) / 2.0;
         ymid = (ymax + ymin) / 2.0;
 
