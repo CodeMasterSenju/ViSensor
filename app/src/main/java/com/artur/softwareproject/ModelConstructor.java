@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.os.Environment;
@@ -9,20 +27,18 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
-
-import static android.os.SystemClock.sleep;
 import static java.lang.Math.PI;
 import static java.lang.Math.acos;
 
 
 /**
  * Created by gabriel on 11.05.17.
+ * This class provides a method to create a 3D model from location data.
  */
-public class ModelConstructor
+class ModelConstructor
 {
+    private static final String TAG = ModelConstructor.class.getSimpleName();
+
     /**
      * Create A 3D-Model of a Room surrounding the passed coordinates
      *
@@ -33,7 +49,7 @@ public class ModelConstructor
      */
 
 
-    public static int createModel(double[][] coordinates, String name, boolean flatGround)
+    static boolean createModel(ArrayList<double[]> coordinates, String name, boolean flatGround)
     {
         Vector3D[] vectors = translateToVectors(coordinates, flatGround);
 
@@ -71,9 +87,9 @@ public class ModelConstructor
      * @param flatGround  should the ground be flat or have hills?
      * @return passed coordinates as 2D-Vectors
      */
-    private static Vector3D[] translateToVectors(double[][] coordinates, boolean flatGround)
+    private static Vector3D[] translateToVectors(ArrayList<double[]> coordinates, boolean flatGround)
     {
-        int size = coordinates.length;
+        int size = coordinates.size();
 
         Vector3D[] vectors = new Vector3D[size];
 
@@ -83,9 +99,9 @@ public class ModelConstructor
 
         for (int i = 0; i < size; i++)
         {
-            double x = coordinates[i][0];
-            double y = coordinates[i][2];
-            double z = coordinates[i][1];
+            double x = coordinates.get(i)[0];
+            double y = coordinates.get(i)[2];
+            double z = coordinates.get(i)[1];
 
             //y = r.nextDouble() * -5; //Test für die Höhenkoordinate
 
@@ -125,7 +141,7 @@ public class ModelConstructor
 
         Vector3D avg = getAverage(initialOuterPoints);
 
-        ArrayList<Vector3D> outerPoints = new ArrayList<Vector3D>(Arrays.asList(initialOuterPoints));
+        ArrayList<Vector3D> outerPoints = new ArrayList<>(Arrays.asList(initialOuterPoints));
 
         boolean loop = true;
 
@@ -152,12 +168,12 @@ public class ModelConstructor
 
                 Vector3D max = v1;
 
-                for (int k = 0; k < vectors.length; k++) //find point on the outside of the OuterPoint graph
+                for (Vector3D k : vectors) //find point on the outside of the OuterPoint graph
                 {
-                    if (vectors[k].dot(n) > max.dot(n) && vectors[k].dot(e) > v1.dot(e) &&
-                            vectors[k].dot(e) < v2.dot(e))
+                    if (k.dot(n) > max.dot(n) && k.dot(e) > v1.dot(e) &&
+                            k.dot(e) < v2.dot(e))
                     {
-                        max = vectors[k];
+                        max = k;
                     }
                 }
 
@@ -197,16 +213,16 @@ public class ModelConstructor
             double xMax = 3;
             double zMax = 3;
 
-            for (int i = 0; i < vectors.length; i++)
+            for (Vector3D v : vectors)
             {
-                if (vectors[i].x < xMin)
-                    xMin = vectors[i].x;
-                if (vectors[i].x > xMax)
-                    xMax = vectors[i].x;
-                if (vectors[i].z < zMin)
-                    zMin = vectors[i].z;
-                if (vectors[i].z > zMax)
-                    zMax = vectors[i].z;
+                if (v.x < xMin)
+                    xMin = v.x;
+                if (v.x > xMax)
+                    xMax = v.x;
+                if (v.z < zMin)
+                    zMin = v.z;
+                if (v.z > zMax)
+                    zMax = v.z;
             }
 
         if (vectors.length <= 2 || xMax - xMin < 1 || zMax - zMin < 1)//if there are too few points or they are to little apart from another return rectangle
@@ -225,21 +241,21 @@ public class ModelConstructor
         Vector3D avg = getAverage(vectors);
 
 
-        for (int i = 0; i < vectors.length; i++)
+        for (Vector3D v : vectors)
         {
             boolean isouterpoint = false;
 
             boolean temp = true;
 
-            Vector3D a = vectors[i].sub(avg);
+            Vector3D a = v.sub(avg);
             a.y = 0;
             double al = a.dot(a);
 
-            for (int j = 0; j < vectors.length; j++)
+            for (Vector3D w : vectors)
             {
-                Vector3D b = vectors[j].sub(avg);
+                Vector3D b = w.sub(avg);
                 b.y = 0;
-                if (vectors[j].sub(avg).dot(a) > al)
+                if (w.sub(avg).dot(a) > al)
                 {
                     temp = false;
                     break;
@@ -253,7 +269,7 @@ public class ModelConstructor
             {
                 for (int j = 0; j < outerPoints.size(); j++)
                 {
-                    if (outerPoints.get(j).x == vectors[i].x && outerPoints.get(j).y == vectors[i].y && outerPoints.get(j).z == vectors[i].z)
+                    if (outerPoints.get(j).x == v.x && outerPoints.get(j).y == v.y && outerPoints.get(j).z == v.z)
                     {
                         isouterpoint = false;
                     }
@@ -262,7 +278,7 @@ public class ModelConstructor
 
             if (isouterpoint)
             {
-                outerPoints.add(vectors[i]);
+                outerPoints.add(v);
             }
 
         }
@@ -286,6 +302,7 @@ public class ModelConstructor
         {
             extraVectors[i] = new Vector3D(0, 0, 0);
         }
+
 
 
         Vector3D v1;
@@ -361,9 +378,9 @@ public class ModelConstructor
     {
         Vector3D avg = new Vector3D(0, 0, 0);
 
-        for (int i = 0; i < vectors.length; i++)
+        for (Vector3D v : vectors)
         {
-            avg = avg.add(vectors[i]);
+            avg = avg.add(v);
         }
 
         if(vectors.length==0)
@@ -384,11 +401,11 @@ public class ModelConstructor
         Vector3D avg = getAverage(v);
         double deg;
 
-        for (int i = 0; i < v.length; i++)
+        for (Vector3D i : v)
         {
-            deg = acos(v[i].sub(avg).normalize().x);
-            if (v[i].sub(avg).z < 0) deg = 2 * PI - deg;
-            v[i].comp = deg;
+            deg = acos(i.sub(avg).normalize().x);
+            if (i.sub(avg).z < 0) deg = 2 * PI - deg;
+            i.comp = deg;
         }
         Arrays.sort(v);
     }
@@ -412,13 +429,13 @@ public class ModelConstructor
     /**
      * sort passed Vectors by the x value
      *
-     * @param v
+     * @param v set of vectors
      */
     private static void sortVectorsAfterX(Vector3D[] v)
     {
-        for (int i = 0; i < v.length; i++)
+        for (Vector3D i : v)
         {
-            v[i].comp = v[i].x;
+            i.comp = i.x;
         }
         Arrays.sort(v);
     }
@@ -430,13 +447,13 @@ public class ModelConstructor
      * @param name              name of the .obj file without the .obj suffix
      * @param vectors           all points
      * @param flatGround        should the ground be flat or have hills?
-     * @return
+     * @return                  A String that represents a 3D model in wavefront format.
      */
     private static String generateString(Vector3D[] surroundingPoints, String name, Vector3D[] vectors, boolean flatGround)
     {
-        ArrayList<Vector3D> vetices = new ArrayList<>();
-        ArrayList<Vector3D> normalvetices = new ArrayList<>();
-        ArrayList<double[]> texturevetices = new ArrayList<>();
+        ArrayList<Vector3D> vertices = new ArrayList<>();
+        ArrayList<Vector3D> normalVertices = new ArrayList<>();
+        ArrayList<double[]> textureVertices = new ArrayList<>();
         ArrayList<int[]> planes = new ArrayList<>();
 
         Vector3D avg = getAverage(surroundingPoints);
@@ -447,42 +464,40 @@ public class ModelConstructor
             if (j == surroundingPoints.length)
                 j = 0;
 
-            buildFence(vetices, normalvetices, texturevetices, planes, surroundingPoints[i], surroundingPoints[j], avg);
+            buildFence(vertices, normalVertices, textureVertices, planes, surroundingPoints[i], surroundingPoints[j], avg);
         }
 
         int i = planes.size();
 
-        buildFloor(vetices, normalvetices, texturevetices, planes, surroundingPoints, vectors, flatGround);
+        buildFloor(vertices, normalVertices, textureVertices, planes, surroundingPoints, vectors, flatGround);
 
-        Vector3D[] va = new Vector3D[vetices.size()];
-        va = vetices.toArray(va);
+        Vector3D[] va = new Vector3D[vertices.size()];
+        va = vertices.toArray(va);
 
-        Vector3D[] nva = new Vector3D[normalvetices.size()];
-        nva = normalvetices.toArray(nva);
+        Vector3D[] nva = new Vector3D[normalVertices.size()];
+        nva = normalVertices.toArray(nva);
 
-        double[][] tva = new double[texturevetices.size()][];
-        tva = texturevetices.toArray(tva);
+        double[][] tva = new double[textureVertices.size()][];
+        tva = textureVertices.toArray(tva);
 
         int[][] pa = new int[planes.size()][];
         pa = planes.toArray(pa);
 
-        String s = makeString(va, nva, tva, pa, i, name);
-
-        return s;
+        return makeString(va, nva, tva, pa, i, name);
     }
 
     /**
      * Add vertices to the passed vertices-arraylists to create a fence model between two points
      *
-     * @param vertices        arraylist of vertices for the obj file
-     * @param normalvertices  arraylist of normalvertices for the obj file
-     * @param texturevertices arraylist of texturevertices for the obj file
-     * @param planes          arraylist of planes for the obj-file
+     * @param vertices        ArrayList of vertices for the obj file
+     * @param normalVertices  ArrayList of normalVertices for the obj file
+     * @param textureVertices ArrayList of textureVertices for the obj file
+     * @param planes          ArrayList of planes for the obj-file
      * @param v1              point 1
      * @param v2              point 2
      * @param avg             Average Vector of Vectors to be surrounded by the fences
      */
-    private static void buildFence(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D v2, Vector3D avg)
+    private static void buildFence(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalVertices, ArrayList<double[]> textureVertices, ArrayList<int[]> planes, Vector3D v1, Vector3D v2, Vector3D avg)
     {
         Vector3D n1 = avg.sub(v1);
         n1.y = 0;
@@ -496,22 +511,22 @@ public class ModelConstructor
         n2.y = 0;
         n2 = n2.normalize();
 
-        buildFencePost(vertices, normalvertices, texturevertices, planes, v1, n1, nn1);
-        buildFenceBoards(vertices, normalvertices, texturevertices, planes, v1, n1, v2, n2);
+        buildFencePost(vertices, normalVertices, textureVertices, planes, v1, n1, nn1);
+        buildFenceBoards(vertices, normalVertices, textureVertices, planes, v1, n1, v2, n2);
     }
 
     /**
-     * Add vertices to the passed vertices-arraylists to create a fencepost model at a passed point
+     * Add vertices to the passed vertices-ArrayLists to create a fencepost model at a passed point
      *
-     * @param vertices        arraylist of vertices for the obj file
-     * @param normalvertices  arraylist of normalvertices for the obj file
-     * @param texturevertices arraylist of texturevertices for the obj file
-     * @param planes          arraylist of planes for the obj-file
+     * @param vertices        ArrayList of vertices for the obj file
+     * @param normalVertices  ArrayList of normalVertices for the obj file
+     * @param textureVertices ArrayList of textureVertices for the obj file
+     * @param planes          ArrayList of planes for the obj-file
      * @param v1              point
      * @param n1              directional vector inside
      * @param nn1             directional vector to the left
      */
-    private static void buildFencePost(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D n1, Vector3D nn1)
+    private static void buildFencePost(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalVertices, ArrayList<double[]> textureVertices, ArrayList<int[]> planes, Vector3D v1, Vector3D n1, Vector3D nn1)
     {
         double postWidth = 0.25;
         double postHeight = 1.0;
@@ -526,156 +541,170 @@ public class ModelConstructor
         vertices.add(v1.sub((n1.add(nn1).normalize().scale(postWidth / 2.0))).add(new Vector3D(0, postHeight, 0)));
         vertices.add(v1.add((n1.sub(nn1).normalize().scale(postWidth / 2.0))).add(new Vector3D(0, postHeight, 0)));
 
-        texturevertices.add(new double[]{0, 0});      //-9
-        texturevertices.add(new double[]{0, 0.25});   //-8
-        texturevertices.add(new double[]{0, 0.5});    //-7
-        texturevertices.add(new double[]{0, 0.75});   //-6
-        texturevertices.add(new double[]{0, 1});      //-5
-        texturevertices.add(new double[]{1, 0});      //-4
-        texturevertices.add(new double[]{1, 0.25});   //-3
-        texturevertices.add(new double[]{1, 0.5});    //-2
-        texturevertices.add(new double[]{1, 0.75});   //-1
-        texturevertices.add(new double[]{1, 1});      //-0
+        textureVertices.add(new double[]{0, 0});      //-9
+        textureVertices.add(new double[]{0, 0.25});   //-8
+        textureVertices.add(new double[]{0, 0.5});    //-7
+        textureVertices.add(new double[]{0, 0.75});   //-6
+        textureVertices.add(new double[]{0, 1});      //-5
+        textureVertices.add(new double[]{1, 0});      //-4
+        textureVertices.add(new double[]{1, 0.25});   //-3
+        textureVertices.add(new double[]{1, 0.5});    //-2
+        textureVertices.add(new double[]{1, 0.75});   //-1
+        textureVertices.add(new double[]{1, 1});      //-0
 
         int s = vertices.size();
-        int ts = texturevertices.size();
-        int ns = normalvertices.size();
+        int ts = textureVertices.size();
+        int ns = normalVertices.size();
         int[] i;
 
-        i = new int[]{s - 0, 1, ts - 9, s - 1, 1, ts - 5, s - 2, 1, ts - 0, s - 3, 1, ts - 4};
+        i = new int[]{s    , 1, ts - 9, s - 1, 1, ts - 5, s - 2, 1, ts    , s - 3, 1, ts - 4};
         planes.add(i);
 
-        i = new int[]{s - 7, 1, ts - 9, s - 6, 1, ts - 5, s - 5, 1, ts - 0, s - 4, 1, ts - 4};
+        i = new int[]{s - 7, 1, ts - 9, s - 6, 1, ts - 5, s - 5, 1, ts    , s - 4, 1, ts - 4};
         planes.add(i);
 
-        i = new int[]{s - 7, 1, ts - 9, s - 4, 1, ts - 8, s - 0, 1, ts - 3, s - 3, 1, ts - 4};
+        i = new int[]{s - 7, 1, ts - 9, s - 4, 1, ts - 8, s    , 1, ts - 3, s - 3, 1, ts - 4};
         planes.add(i);
 
-        i = new int[]{s - 4, 1, ts - 8, s - 5, 1, ts - 7, s - 1, 1, ts - 2, s - 0, 1, ts - 3};
+        i = new int[]{s - 4, 1, ts - 8, s - 5, 1, ts - 7, s - 1, 1, ts - 2, s    , 1, ts - 3};
         planes.add(i);
 
         i = new int[]{s - 5, 1, ts - 7, s - 6, 1, ts - 6, s - 2, 1, ts - 1, s - 1, 1, ts - 2};
         planes.add(i);
 
-        i = new int[]{s - 6, 1, ts - 6, s - 7, 1, ts - 5, s - 3, 1, ts - 0, s - 2, 1, ts - 1};
+        i = new int[]{s - 6, 1, ts - 6, s - 7, 1, ts - 5, s - 3, 1, ts    , s - 2, 1, ts - 1};
         planes.add(i);
     }
 
     /**
-     * Add vertices to the passed vertices-arraylists to create fence-boards between two points
+     * Add vertices to the passed vertices-ArrayLists to create fence-boards between two points
      *
-     * @param vertices        arraylist of vertices for the obj file
-     * @param normalvertices  arraylist of normalvertices for the obj file
-     * @param texturevertices arraylist of texturevertices for the obj file
-     * @param planes          arraylist of planes for the obj-file
+     * @param vertices        ArrayList of vertices for the obj file
+     * @param normalVertices  ArrayList of normalVertices for the obj file
+     * @param textureVertices ArrayList of textureVertices for the obj file
+     * @param planes          ArrayList of planes for the obj-file
      * @param v1              point 1
      * @param v2              point 2
      * @param n1              directional vector inside from v1
      * @param n2              directional vector inside from v1
      */
-    private static void buildFenceBoards(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D v1, Vector3D n1, Vector3D v2, Vector3D n2)
+    private static void buildFenceBoards(ArrayList<Vector3D> vertices,
+                                         ArrayList<Vector3D> normalVertices,
+                                         ArrayList<double[]> textureVertices,
+                                         ArrayList<int[]> planes,
+                                         Vector3D v1,
+                                         Vector3D n1,
+                                         Vector3D v2,
+                                         Vector3D n2)
     {
         double boardSize = 0.3;
-        double boardwidth = 0.05;
+        double boardWidth = 0.05;
         double boardHeight1 = 0.3;
         double boardHeight2 = 0.65;
 
         //build board nr 1
-        vertices.add(v1.add(n1.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
-        vertices.add(v2.add(n2.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
-        vertices.add(v2.add(n2.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
-        vertices.add(v1.add(n1.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
+        vertices.add(v1.add(n1.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
+        vertices.add(v2.add(n2.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
+        vertices.add(v2.add(n2.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
+        vertices.add(v1.add(n1.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight1, 0)));
 
-        vertices.add(v1.add(n1.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
-        vertices.add(v2.add(n2.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
-        vertices.add(v2.add(n2.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
-        vertices.add(v1.add(n1.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
+        vertices.add(v1.add(n1.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
+        vertices.add(v2.add(n2.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
+        vertices.add(v2.add(n2.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
+        vertices.add(v1.add(n1.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight1 + boardSize, 0)));
 
         double l = v1.sub(v2).getLength();
 
-        texturevertices.add(new double[]{l, 0});       //-12
-        texturevertices.add(new double[]{1, 0});       //-11
-        texturevertices.add(new double[]{1, 0.05});    //-10
-        texturevertices.add(new double[]{0, 0});       //-9
-        texturevertices.add(new double[]{0, 0.05});    //-8
-        texturevertices.add(new double[]{0, 0.35});    //-7
-        texturevertices.add(new double[]{0, 0.4});     //-6
-        texturevertices.add(new double[]{0, 0.7});     //-5
-        texturevertices.add(new double[]{l, 0});       //-4
-        texturevertices.add(new double[]{l, 0.05});    //-3
-        texturevertices.add(new double[]{l, 0.35});    //-2
-        texturevertices.add(new double[]{l, 0.4});     //-1
-        texturevertices.add(new double[]{l, 0.7});     //-0
+        textureVertices.add(new double[]{l, 0});       //-12
+        textureVertices.add(new double[]{1, 0});       //-11
+        textureVertices.add(new double[]{1, 0.05});    //-10
+        textureVertices.add(new double[]{0, 0});       //-9
+        textureVertices.add(new double[]{0, 0.05});    //-8
+        textureVertices.add(new double[]{0, 0.35});    //-7
+        textureVertices.add(new double[]{0, 0.4});     //-6
+        textureVertices.add(new double[]{0, 0.7});     //-5
+        textureVertices.add(new double[]{l, 0});       //-4
+        textureVertices.add(new double[]{l, 0.05});    //-3
+        textureVertices.add(new double[]{l, 0.35});    //-2
+        textureVertices.add(new double[]{l, 0.4});     //-1
+        textureVertices.add(new double[]{l, 0.7});     //-0
 
         int s = vertices.size();
-        int ts = texturevertices.size();
-        int ns = normalvertices.size();
+        int ts = textureVertices.size();
+        int ns = normalVertices.size();
         int[] i;
 
-        i = new int[]{s - 3, 1, ts - 9, s - 2, 1, ts - 4, s - 1, 1, ts - 3, s - 0, 1, ts - 8};
+        i = new int[]{s - 3, 1, ts - 9, s - 2, 1, ts - 4, s - 1, 1, ts - 3, s    , 1, ts - 8};
         planes.add(i);
 
         i = new int[]{s - 4, 1, ts - 8, s - 5, 1, ts - 3, s - 6, 1, ts - 4, s - 7, 1, ts - 9};
         planes.add(i);
 
-        i = new int[]{s - 3, 1, ts - 9, s - 0, 1, ts - 8, s - 4, 1, ts - 10, s - 7, 1, ts - 11};
+        i = new int[]{s - 3, 1, ts - 9, s    , 1, ts - 8, s - 4, 1, ts - 10, s - 7, 1, ts - 11};
         planes.add(i);
 
-        i = new int[]{s - 0, 1, ts - 5, s - 1, 1, ts - 0, s - 5, 1, ts - 4, s - 4, 1, ts - 9};
+        i = new int[]{s    , 1, ts - 5, s - 1, 1, ts    , s - 5, 1, ts - 4, s - 4, 1, ts - 9};
         planes.add(i);
 
         i = new int[]{s - 1, 1, ts - 9, s - 2, 1, ts - 8, s - 6, 1, ts - 10, s - 5, 1, ts - 11};
         planes.add(i);
 
-        i = new int[]{s - 2, 1, ts - 0, s - 3, 1, ts - 5, s - 7, 1, ts - 9, s - 6, 1, ts - 4};
+        i = new int[]{s - 2, 1, ts    , s - 3, 1, ts - 5, s - 7, 1, ts - 9, s - 6, 1, ts - 4};
         planes.add(i);
 
 
         //build board nr 2
-        vertices.add(v1.add(n1.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
-        vertices.add(v2.add(n2.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
-        vertices.add(v2.add(n2.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
-        vertices.add(v1.add(n1.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
+        vertices.add(v1.add(n1.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
+        vertices.add(v2.add(n2.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
+        vertices.add(v2.add(n2.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
+        vertices.add(v1.add(n1.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight2, 0)));
 
-        vertices.add(v1.add(n1.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
-        vertices.add(v2.add(n2.normalize().scale(boardwidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
-        vertices.add(v2.add(n2.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
-        vertices.add(v1.add(n1.normalize().scale(-1 * boardwidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
+        vertices.add(v1.add(n1.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
+        vertices.add(v2.add(n2.normalize().scale(boardWidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
+        vertices.add(v2.add(n2.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
+        vertices.add(v1.add(n1.normalize().scale(-1 * boardWidth / 2)).add(new Vector3D(0, boardHeight2 + boardSize, 0)));
 
         s = vertices.size();
 
-        i = new int[]{s - 3, 1, ts - 9, s - 2, 1, ts - 4, s - 1, 1, ts - 3, s - 0, 1, ts - 8};
+        i = new int[]{s - 3, 1, ts - 9, s - 2, 1, ts - 4, s - 1, 1, ts - 3,  s    , 1, ts - 8};
         planes.add(i);
 
-        i = new int[]{s - 4, 1, ts - 8, s - 5, 1, ts - 3, s - 6, 1, ts - 4, s - 7, 1, ts - 9};
+        i = new int[]{s - 4, 1, ts - 8, s - 5, 1, ts - 3, s - 6, 1, ts - 4,  s - 7, 1, ts - 9};
         planes.add(i);
 
-        i = new int[]{s - 3, 1, ts - 9, s - 0, 1, ts - 8, s - 4, 1, ts - 10, s - 7, 1, ts - 11};
+        i = new int[]{s - 3, 1, ts - 9, s    , 1, ts - 8, s - 4, 1, ts - 10, s - 7, 1, ts - 11};
         planes.add(i);
 
-        i = new int[]{s - 0, 1, ts - 5, s - 1, 1, ts - 0, s - 5, 1, ts - 4, s - 4, 1, ts - 9};
+        i = new int[]{s    , 1, ts - 5, s - 1, 1, ts    , s - 5, 1, ts - 4,  s - 4, 1, ts - 9};
         planes.add(i);
 
         i = new int[]{s - 1, 1, ts - 9, s - 2, 1, ts - 8, s - 6, 1, ts - 10, s - 5, 1, ts - 11};
         planes.add(i);
 
-        i = new int[]{s - 2, 1, ts - 0, s - 3, 1, ts - 5, s - 7, 1, ts - 9, s - 6, 1, ts - 4};
+        i = new int[]{s - 2, 1, ts    , s - 3, 1, ts - 5, s - 7, 1, ts - 9,  s - 6, 1, ts - 4};
         planes.add(i);
     }
 
     /**
-     * Add vertices to the passed vertices-arraylists to create a model of the ground
+     * Add vertices to the passed vertices-ArrayLists to create a model of the ground
      *
-     * @param vertices          arraylist of vertices for the obj file
-     * @param normalvertices    arraylist of normalvertices for the obj file
-     * @param texturevertices   arraylist of texturevertices for the obj file
-     * @param planes            arraylist of planes for the obj-file
+     * @param vertices          ArrayList of vertices for the obj file
+     * @param normalVertices    ArrayList of normalVertices for the obj file
+     * @param textureVertices   ArrayList of textureVertices for the obj file
+     * @param planes            ArrayList of planes for the obj-file
      * @param surroundingPoints points surrounding all points
      * @param vectors           all points
      * @param flatGround        should the ground be flat or have hills?
      */
-    public static void buildFloor(ArrayList<Vector3D> vertices, ArrayList<Vector3D> normalvertices, ArrayList<double[]> texturevertices, ArrayList<int[]> planes, Vector3D[] surroundingPoints, Vector3D[] vectors, boolean flatGround)
+    private static void buildFloor(ArrayList<Vector3D> vertices,
+                                   ArrayList<Vector3D> normalVertices,
+                                   ArrayList<double[]> textureVertices,
+                                   ArrayList<int[]> planes,
+                                   Vector3D[] surroundingPoints,
+                                   Vector3D[] vectors,
+                                   boolean flatGround)
     {
+      
         double extraSpace = 2000;
         double textureconstant = 10;
         ArrayList<int[]> floorplanes = new ArrayList<>();
@@ -686,14 +715,13 @@ public class ModelConstructor
         {
             ArrayList<Vector3D> floorPoints = new ArrayList<>();
 
-            // Add distant points
-            for (int i = 0; i < surroundingPoints.length; i++)
+            for (Vector3D sur : surroundingPoints)
             {
-                Vector3D ni = surroundingPoints[i].sub(avg);
+                Vector3D ni = sur.sub(avg);
                 ni.y = 0;
                 ni.normalize();
-                floorPoints.add(surroundingPoints[i].add(ni.scale(extraSpace)));
-                floorPoints.add(surroundingPoints[i]);
+                floorPoints.add(sur.add(ni.scale(extraSpace)));
+                floorPoints.add(sur);
             }
 
             floorPoints.addAll(Arrays.asList(vectors));
@@ -702,7 +730,7 @@ public class ModelConstructor
 
             sortVectorsAfterX(points);
 
-            triangulate(vertices, texturevertices, floorplanes, points, textureconstant);
+            triangulate(vertices, textureVertices, floorPlanes, points, textureConstant);
         } else
         {
             for (int i = 0; i < surroundingPoints.length; i++)
@@ -729,84 +757,88 @@ public class ModelConstructor
                 vertices.add(surroundingPoints[i].add(ni.scale(extraSpace)));
                 vertices.add(surroundingPoints[j].add(nj.scale(extraSpace)));
 
-                texturevertices.add(new double[]{avg.x / textureconstant, avg.z / textureconstant});
-                texturevertices.add(new double[]{surroundingPoints[i].x / textureconstant, surroundingPoints[i].z / textureconstant});
-                texturevertices.add(new double[]{surroundingPoints[j].x / textureconstant, surroundingPoints[j].z / textureconstant});
-                texturevertices.add(new double[]{surroundingPoints[i].add(ni.scale(extraSpace)).x / textureconstant, surroundingPoints[i].add(ni.scale(extraSpace)).z / textureconstant});
-                texturevertices.add(new double[]{surroundingPoints[j].add(nj.scale(extraSpace)).x / textureconstant, surroundingPoints[j].add(nj.scale(extraSpace)).z / textureconstant});
+                textureVertices.add(new double[]{avg.x / textureConstant, avg.z / textureConstant});
+                textureVertices.add(new double[]{surroundingPoints[i].x / textureConstant, surroundingPoints[i].z / textureConstant});
+                textureVertices.add(new double[]{surroundingPoints[j].x / textureConstant, surroundingPoints[j].z / textureConstant});
+                textureVertices.add(new double[]{surroundingPoints[i].add(ni.scale(extraSpace)).x / textureConstant, surroundingPoints[i].add(ni.scale(extraSpace)).z / textureConstant});
+                textureVertices.add(new double[]{surroundingPoints[j].add(nj.scale(extraSpace)).x / textureConstant, surroundingPoints[j].add(nj.scale(extraSpace)).z / textureConstant});
 
 
                 int s = vertices.size();
-                int ts = texturevertices.size();
+                int ts = textureVertices.size();
 
-                floorplanes.add(new int[]{s - 1, 1, ts - 1, s - 2, 1, ts - 2, s - 3, 1, ts - 3});
-                floorplanes.add(new int[]{s - 1, 1, ts - 1, s - 0, 1, ts - 0, s - 2, 1, ts - 2});
-                floorplanes.add(new int[]{s - 3, 1, ts - 3, s - 2, 1, ts - 2, s - 4, 1, ts - 4});
+                floorPlanes.add(new int[]{s - 1, 1, ts - 1, s - 2, 1, ts - 2, s - 3, 1, ts - 3});
+                floorPlanes.add(new int[]{s - 1, 1, ts - 1, s    , 1, ts    , s - 2, 1, ts - 2});
+                floorPlanes.add(new int[]{s - 3, 1, ts - 3, s - 2, 1, ts - 2, s - 4, 1, ts - 4});
             }
         }
 
-        planes.addAll(floorplanes);
+        planes.addAll(floorPlanes);
     }
 
     /**
-     * @param vertices        arraylist of vertices for the obj file
-     * @param texturevertices arraylist of texturevertices for the obj file
-     * @param floorplanes     arraylist of floor-planes for the obj-file
+     * @param vertices        ArrayList of vertices for the obj file
+     * @param textureVertices ArrayList of textureVertices for the obj file
+     * @param floorPlanes     ArrayList of floor-planes for the obj-file
      * @param points          all points
-     * @param textureconstant constant to calculate texture vertices
+     * @param textureConstant constant to calculate texture vertices
      */
-    private static void triangulate(ArrayList<Vector3D> vertices, ArrayList<double[]> texturevertices, ArrayList<int[]> floorplanes, Vector3D[] points, double textureconstant)
+    private static void triangulate(ArrayList<Vector3D> vertices,
+                                    ArrayList<double[]> textureVertices,
+                                    ArrayList<int[]> floorPlanes,
+                                    Vector3D[] points,
+                                    double textureConstant)
     {
         Triangulator t = new Triangulator();
         Vector3D[][] r = t.triangulate(points);
 
-        for (int i = 0; i < r.length; i++)
+        for (Vector3D[] v : r)
         {
-            vertices.add(r[i][0]);
-            vertices.add(r[i][1]);
-            vertices.add(r[i][2]);
+            vertices.add(v[0]);
+            vertices.add(v[1]);
+            vertices.add(v[2]);
 
-            texturevertices.add(new double[]{r[i][0].x / textureconstant, r[i][0].z / textureconstant});
-            texturevertices.add(new double[]{r[i][1].x / textureconstant, r[i][1].z / textureconstant});
-            texturevertices.add(new double[]{r[i][2].x / textureconstant, r[i][2].z / textureconstant});
+            textureVertices.add(new double[]{v[0].x / textureConstant, v[0].z / textureConstant});
+            textureVertices.add(new double[]{v[1].x / textureConstant, v[1].z / textureConstant});
+            textureVertices.add(new double[]{v[2].x / textureConstant, v[2].z / textureConstant});
 
             int s = vertices.size();
-            int ts = texturevertices.size();
+            int ts = textureVertices.size();
 
-            floorplanes.add(new int[]{s - 0, 1, ts - 0, s - 1, 1, ts - 1, s - 2, 1, ts - 2});
+            floorPlanes.add(new int[]{s, 1, ts, s - 1, 1, ts - 1, s - 2, 1, ts - 2});
         }
     }
 
     /**
      * Parse the String to be written to a obj-file from the params
      *
-     * @param vertices        arraylist of vertices for the obj file
-     * @param normalvertices  arraylist of normalvertices for the obj file
-     * @param texturevertices arraylist of texturevertices for the obj file
-     * @param planes          arraylist of planes for the obj-file
+     * @param vertices        ArrayList of vertices for the obj file
+     * @param normalVertices  ArrayList of normalVertices for the obj file
+     * @param textureVertices ArrayList of textureVertices for the obj file
+     * @param planes          ArrayList of planes for the obj-file
      * @param floorStartIndex which planes are part of the floor
      * @param name            name of the obj-file without the .obj suffix
-     * @return
+     * @return                A String that represents a 3D model in wavefront format.
      */
-    private static String makeString(Vector3D[] vertices, Vector3D[] normalvertices, double[][] texturevertices, int[][] planes, int floorStartIndex, String name)
+    private static String makeString(Vector3D[] vertices, Vector3D[] normalVertices, double[][] textureVertices, int[][] planes, int floorStartIndex, String name)
     {
         String s = "mtllib env.mtl\n";
 
         Vector3D v;
         double[] tv;
 
-        for (int i = 0; i < vertices.length; i++)//add vertices
+        for (Vector3D u : vertices)//add vertices
         {
-            v = vertices[i];
+            v = u;
             String ts = "v " + v.x + " " + v.y + " " + -1 * v.z/*transform to right-handed coordinate system*/ + "\n";
             s += ts;
         }
 
-        s += "vn 0 0 0\n"; //add normalvertex
+        s += "vn 0 0 0\n"; //add normalVertex
 
-        for (int i = 0; i < texturevertices.length; i++)//add texture-verices
+        for (double[] vt : textureVertices)//add texture-vertices
         {
-            tv = texturevertices[i];
+            tv = vt;
             String ts = "vt " + tv[0] + " " + tv[1] + "\n";
             s += ts;
         }
@@ -857,23 +889,25 @@ public class ModelConstructor
      * @param s    String to be written to the file
      * @param name name of the file without the .obj suffix
      */
-    private static int createFile(String s, String name)
+    private static boolean createFile(String s, String name)
     {
         File f = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj/", name + ".obj");
 
         try
         {
-            f.createNewFile();
+            if (!f.createNewFile())
+                Log.d(TAG, "Failed to create a new file.");
+
             BufferedWriter writer = new BufferedWriter(new FileWriter(f, false /*append*/));
             writer.write(s);
             writer.close();
         } catch (IOException e)
         {
             e.printStackTrace();
-            return -1;//failure
+            return false;//failure
         }
 
-        return 1;//success
+        return true;//success
 
     }
 }

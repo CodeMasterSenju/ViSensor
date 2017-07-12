@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.content.Context;
@@ -8,6 +26,7 @@ import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.BaseAdapter;
@@ -30,9 +49,7 @@ public class BluetoothConnectionList extends AppCompatActivity{
     private static final String TAG = BluetoothConnectionList.class.getSimpleName();
 
 
-    private ListView bluetoothList;
     private ListAdapter ListAdapter;
-    private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
     private boolean mScanning;
     private Handler mHandler;
@@ -43,23 +60,24 @@ public class BluetoothConnectionList extends AppCompatActivity{
 
     private static final long SCAN_PERIOD = 5000;
     public static final String EXTRA_FILES = "dataset_list";
-    private final int REQUEST_ENABLE_BT = 1;
 
-    private File topLevelDir;
-    private File jsonDir;
-    private File objDir;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_bluetooth_connection);
 
+        ListView bluetoothList;
         bluetoothList = (ListView) findViewById(R.id.bluetoothList);
         ListAdapter = new BluetoothConnectionListAdapter(this, bluetoothAddress, bluetoothName, bDevices);
         bluetoothList.setAdapter(ListAdapter);
+
+        BluetoothManager bluetoothManager;
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         mHandler = new Handler();
+
+        File topLevelDir, jsonDir, objDir;
 
         //Creating the directory structure for the app.
         topLevelDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor");
@@ -67,28 +85,35 @@ public class BluetoothConnectionList extends AppCompatActivity{
         objDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj");
 
         if(!topLevelDir.exists()) {
-            topLevelDir.mkdir();
+            if(!topLevelDir.mkdir())
+                Log.d(TAG, "Creating top level directory failed.");
 
             if (!jsonDir.exists()) {
-                jsonDir.mkdir();
+                if(!jsonDir.mkdir())
+                    Log.d(TAG, "Creating json directory failed.");
             }
 
             if (!objDir.exists()) {
-                objDir.mkdir();
+                if(!objDir.mkdir())
+                    Log.d(TAG, "Creating obj directory failed.");
             }
         } else if(!jsonDir.exists()) {
-            jsonDir.mkdir();
+            if(!jsonDir.mkdir())
+                Log.d(TAG, "Creating json directory failed.");
 
             if(!objDir.exists()) {
-                objDir.mkdir();
+                if(!objDir.mkdir())
+                    Log.d(TAG, "Creating obj directory failed.");
             }
         } else if(!objDir.exists()) {
-            objDir.mkdir();
+            if(!objDir.mkdir())
+                Log.d(TAG, "Creating obj directory failed.");
         }
 
 
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            final int REQUEST_ENABLE_BT = 1;
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
@@ -129,6 +154,8 @@ public class BluetoothConnectionList extends AppCompatActivity{
                 }
             };
 
+
+
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             // Stops scanning after a pre-defined scan period.
@@ -147,6 +174,8 @@ public class BluetoothConnectionList extends AppCompatActivity{
             bluetoothAdapter.stopLeScan(mLeScanCallback);
         }
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu){

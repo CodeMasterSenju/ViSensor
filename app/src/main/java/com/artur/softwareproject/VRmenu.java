@@ -1,6 +1,5 @@
 package com.artur.softwareproject;
 
-import android.app.DialogFragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
@@ -12,22 +11,21 @@ import android.widget.ListView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
 
 /**
  * Created by artur_000 on 01.05.2017.
+ * A menu to display recorded sessions in a list.
  */
 
 public class VRmenu extends AppCompatActivity{
 
     private static final String TAG = VRmenu.class.getSimpleName();
 
-    private ArrayList<String> sessionFileList;
     private final String path = "/ViSensor/Json";
     private final File pathName = new File(Environment.getExternalStorageDirectory().toString() + path);
-
-    private ListView sessions;
     private VRmenuAdapter adapter;
 
     private Intent webServerIntent;
@@ -37,22 +35,17 @@ public class VRmenu extends AppCompatActivity{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_vr_menu);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
-        sessionFileList = new ArrayList<>();
+        if (getSupportActionBar() != null)
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); //implements the back button (android handles that by default)
 
-        String[] filenames = getIntent().getStringArrayExtra(EXTRA_FILES);
+        ArrayList<String> sessionFileList = new ArrayList<>();
 
-        if(filenames == null)
-        {
-            for (String s : pathName.list())
-                sessionFileList.add(s);
-        }
+        String[] fileNames = getIntent().getStringArrayExtra(EXTRA_FILES);
+
+        if(fileNames == null)
+            Collections.addAll(sessionFileList, pathName.list());
         else
-        {
-            for (String s : filenames)
-                sessionFileList.add(s);
-        }
-
+            Collections.addAll(sessionFileList, fileNames);
 
 
         //SimpleWebServer simpleWebServer = new SimpleWebServer(8080, this.getAssets());
@@ -61,7 +54,7 @@ public class VRmenu extends AppCompatActivity{
         webServerIntent = new Intent(this, SimpleWebServer.class);
         startService(webServerIntent);
 
-        sessions = (ListView) findViewById(R.id.sessionList);
+        ListView sessions = (ListView) findViewById(R.id.sessionList);
         adapter = new VRmenuAdapter(this, sessionFileList);
         sessions.setAdapter(adapter);
     }

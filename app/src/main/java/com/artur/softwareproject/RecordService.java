@@ -1,3 +1,21 @@
+/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+ *
+ * This file is part of ViSensor.
+ *
+ * ViSensor is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * ViSensor is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with ViSensor.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package com.artur.softwareproject;
 
 import android.app.Service;
@@ -21,20 +39,21 @@ import java.util.GregorianCalendar;
 
 /**
  * Created by Martin Kern on 27.05.2017.
- * This service saves sensor data in a JSON file.
+ * This service saves sensor data in a JSON file. It also records position data in an ArrayList and use
+ * it to call the ModelConstructor.
  */
 
 public class RecordService extends Service implements Runnable{
 
     private static final String TAG = RecordService.class.getSimpleName();
 
-    //Variablen
+    //Variables
     private double temperature;
     private double humidity;
     private double illuminance;
     private double[] pos = {0,0,0};
     private double[] gpsStartingPos = {0,0};
-    private boolean bGps;
+    private boolean bGps; //This variable is set true when the first gps coordinates are received.
     private Runnable recService = this;
     final private IBinder recordBinder = new LocalBinder();
     final String path = "/ViSensor/Json";
@@ -45,7 +64,7 @@ public class RecordService extends Service implements Runnable{
     private File jsonFile;
     private String fileName;
     
-    private ArrayList<double[]> positionList; //Positionsdaten, die vom ModelConstructor verwendet werden.
+    private ArrayList<double[]> positionList; //Position data that is used by the ModelConstructor class
 
     Handler recordHandler = new Handler();
 
@@ -67,7 +86,7 @@ public class RecordService extends Service implements Runnable{
 
         bGps = false;
 
-        //Variablen initialisieren
+        //initialize variables
         temperature = 0;
         humidity = 0;
         fileName = now();
@@ -88,7 +107,6 @@ public class RecordService extends Service implements Runnable{
     @Override
     public void onDestroy() {
         super.onDestroy();
-        record = false;
     }
 
 //BroadcastReceiver=================================================================================
@@ -126,8 +144,8 @@ public class RecordService extends Service implements Runnable{
                     if(!jsonFile.createNewFile())
                         Log.d(TAG, "Failed to create a new json file.");
                     BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-                    writer.write(   "{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[0] + ",\n" +
-                            "\"longitude\": " + gpsStartingPos[1] + "\n},\n{\"session\": [\n");
+                    writer.write(   "{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[1] + ",\n" +
+                            "\"longitude\": " + gpsStartingPos[0] + "\n},\n\"session\": [\n");
                     writer.close();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -143,7 +161,7 @@ public class RecordService extends Service implements Runnable{
     private BroadcastReceiver gpsReceive = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            double[] gps = (double[])intent.getExtras().get("gpsDistanz");
+            double[] gps = (double[])intent.getExtras().get("gpsDistance");
 
             if(gps == null) {
                 gps = new double[2];
@@ -225,7 +243,7 @@ public class RecordService extends Service implements Runnable{
                 + "  }";
     }
 
-    public class LocalBinder extends Binder {
+    class LocalBinder extends Binder {
         RecordService getService() {
             // Return this instance of LocalService so clients can call public methods
             return RecordService.this;
@@ -272,11 +290,10 @@ public class RecordService extends Service implements Runnable{
         recordHandler.postDelayed(this, 1000); //run every second
     }
 
-    public int create3dModel() {
+    public boolean create3dModel() {
+        record = false;
         Log.d(TAG, "About to call modelConstructor");
-        double[][] posArray = new double[3][positionList.size()];
-        posArray = positionList.toArray(posArray);
-        return ModelConstructor.createModel(posArray, fileName, false);
+        return ModelConstructor.createModel(positionList, fileName, false);
     }
 }
 
