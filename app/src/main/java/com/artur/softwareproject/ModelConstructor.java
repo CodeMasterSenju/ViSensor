@@ -114,12 +114,15 @@ class ModelConstructor
 
         Vector3D s = new Vector3D(0, maxY, 0);
 
+
+        // Adjust vertical position of model.
         for (int i = 0; i < size; i++)
         {
-            vectors[i] = vectors[i].sub(s);
+            //vectors[i] = vectors[i].sub(s);
             if (flatGround)
                 vectors[i].y = 0;
         }
+
 
         return vectors;
     }
@@ -301,7 +304,11 @@ class ModelConstructor
         }
 
 
-        Vector3D v1, v2, e, n;
+
+        Vector3D v1;
+        Vector3D v2;
+        Vector3D e;
+        Vector3D n;
         Vector3D avg = getAverage(v);
 
         for (int i = 0; i < v.length; i++)// find direction in which each vector should be moved
@@ -697,9 +704,10 @@ class ModelConstructor
                                    Vector3D[] vectors,
                                    boolean flatGround)
     {
-        double extraSpace = 5000;
-        double textureConstant = 10;
-        ArrayList<int[]> floorPlanes = new ArrayList<>();
+      
+        double extraSpace = 2000;
+        double textureconstant = 10;
+        ArrayList<int[]> floorplanes = new ArrayList<>();
 
         Vector3D avg = getAverage(vectors);
 
@@ -859,7 +867,7 @@ class ModelConstructor
 
 
 
-            /*
+
             //render back-side of every plane
             p = planes[i];
             ts = "f ";
@@ -869,7 +877,7 @@ class ModelConstructor
                 ts += p[j - 2] + "/" + p[j] + "/" + p[j - 1] + " ";
             }
             ts += "\n";
-            s += ts;*/
+            s += ts;
         }
 
         return s;

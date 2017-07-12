@@ -196,6 +196,7 @@ public class Triangulator
         dx = xmax - xmin;
         dy = ymax - ymin;
         dmax = (dx > dy) ? dx : dy;
+        dmax = dmax * 10;
         xmid = (xmax + xmin) / 2.0;
         ymid = (ymax + ymin) / 2.0;
 
@@ -360,7 +361,7 @@ public class Triangulator
         XYZ[] inpoints = new XYZ[nv + 3];
 
         for (int i = 0; i < nv; i++)
-            inpoints[i] = new XYZ(points[i].x, points[i].z, 0);
+            inpoints[i] = new XYZ(points[i].x, points[i].z, points[i].y);
 
         inpoints[nv + 0] = new XYZ(0, 0, 0);
         inpoints[nv + 1] = new XYZ(0, 0, 0);
@@ -377,9 +378,9 @@ public class Triangulator
 
         for (int i = 0; i < ntri; i++)
         {
-            ret[i][0] = new Vector3D(points[triangles[i].p1].x, points[triangles[i].p1].z, points[triangles[i].p1].y);
-            ret[i][1] = new Vector3D(points[triangles[i].p2].x, points[triangles[i].p2].z, points[triangles[i].p2].y);
-            ret[i][2] = new Vector3D(points[triangles[i].p3].x, points[triangles[i].p3].z, points[triangles[i].p3].y);
+            ret[i][0] = new Vector3D(inpoints[triangles[i].p1].x, inpoints[triangles[i].p1].z, inpoints[triangles[i].p1].y);
+            ret[i][1] = new Vector3D(inpoints[triangles[i].p2].x, inpoints[triangles[i].p2].z, inpoints[triangles[i].p2].y);
+            ret[i][2] = new Vector3D(inpoints[triangles[i].p3].x, inpoints[triangles[i].p3].z, inpoints[triangles[i].p3].y);
         }
 
         return ret;
