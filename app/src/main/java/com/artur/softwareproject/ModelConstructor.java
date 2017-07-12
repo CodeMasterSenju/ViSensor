@@ -706,8 +706,8 @@ class ModelConstructor
     {
       
         double extraSpace = 2000;
-        double textureconstant = 10;
-        ArrayList<int[]> floorplanes = new ArrayList<>();
+        double textureConstant = 10;
+        ArrayList<int[]> floorPlanes = new ArrayList<>();
 
         Vector3D avg = getAverage(vectors);
 
