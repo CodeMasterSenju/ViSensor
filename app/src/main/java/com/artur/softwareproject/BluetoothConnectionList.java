@@ -59,7 +59,8 @@ public class BluetoothConnectionList extends AppCompatActivity{
     private ArrayList<BluetoothDevice> bDevices = new ArrayList<>();
 
     private static final long SCAN_PERIOD = 5000;
-    public static final String EXTRA_FILES = "";
+    public static final String EXTRA_FILES = "dataset_list";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
