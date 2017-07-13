@@ -37,6 +37,7 @@ import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.concurrent.SynchronousQueue;
 
 import static android.os.SystemClock.sleep;
 
@@ -56,6 +57,8 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String> {
     private int connected;
     private Thread connectThread;
     private ProgressDialog connectDialog;
+    private boolean timeout;
+    private final Intent bluetoothServiceIntent;
     private final BluetoothConnectionListAdapter bclaReference = this;
 
     private static final String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
@@ -68,6 +71,8 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String> {
         this.contextActivity = context;
         connected = 0;
         this.intent = new Intent();
+        timeout = false;
+        bluetoothServiceIntent = new Intent(context, BluetoothService.class);
 
         BroadcastReceiver connectedReceive = new BroadcastReceiver(){
             @Override
@@ -101,14 +106,18 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String> {
             super.handleMessage(msg);
             BluetoothConnectionListAdapter target = mTarget.get();
             target.connectDialog.dismiss();
-            target.mainIntent = new Intent(target.contextActivity, Main.class);
 
-            target.contextActivity.startActivity(target.mainIntent);
-            target.connectThread.interrupt();
-            target.connected = 0;
-            Log.d(TAG, "THREAD INTERRUPTED " + target.connectThread.getState());
-            target.contextActivity.finish();
-            Log.d(TAG, "BIS HIER.");
+            if (target.timeout) {
+                target.contextActivity.stopService(target.bluetoothServiceIntent); //The BluetoothService needs to be stopped if connecting timed out.
+                target.timeout = false; //Reset timeout variable to try connecting again.
+            } else {
+                target.mainIntent = new Intent(target.contextActivity, Main.class);
+                target.contextActivity.startActivity(target.mainIntent);
+                target.connectThread.interrupt();
+                target.connected = 0;
+                Log.d(TAG, "THREAD INTERRUPTED " + target.connectThread.getState());
+                target.contextActivity.finish();
+            }
         }
     }
 
@@ -170,10 +179,17 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String> {
                         @Override
                         public void run() {
                             int stop = 0;
-                            while (stop == 0) {
+                            int counter = 0;
+
+                            while (stop == 0 && counter < 5) {//Timeout after 10 seconds.
                                 stop = getConnected();
+                                counter++;
                                 sleep(2000);
                             }
+
+                            if (stop == 0 && counter == 4)//Timeout occurred after 10s of waiting and stop is still 0.
+                                timeout = true;
+
                             connectHandler.sendEmptyMessage(0);
                         }
                     });
