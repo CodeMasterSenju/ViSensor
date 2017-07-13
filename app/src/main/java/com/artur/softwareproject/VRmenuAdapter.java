@@ -30,8 +30,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import java.io.File;
 import java.util.ArrayList;
+
+import static android.os.SystemClock.sleep;
 
 
 class VRmenuAdapter extends ArrayAdapter<String> {
@@ -92,9 +96,20 @@ class VRmenuAdapter extends ArrayAdapter<String> {
 
                 if (!jsonFile.exists()) {
                     Log.d(TAG, "JSON file was not found.");
+                    Toast.makeText(context.getApplicationContext(), "json file was not found.", Toast.LENGTH_LONG).show();
+                    remove(getItem(position));
+                    notifyDataSetChanged();
+                    objForDelete = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames.get(position).replace("json", "obj"));
+                    if (objForDelete.exists()) {//obj file without a json file is useless and can be deleted.
+                        if (!objForDelete.delete())
+                            Log.d(TAG, "Deleting obj file failed.");
+                    }
+
                 } else {
                     if (!objFile.exists()) {
+                        Toast.makeText(context.getApplicationContext(), "obj file was not found.", Toast.LENGTH_LONG).show();
                         Log.d(TAG, "OBJ file was not found");
+                        sleep(1000);//Some time to read the message.
                     }
                     Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
                     webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);

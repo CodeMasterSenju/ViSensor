@@ -62,7 +62,7 @@ public class Main extends AppCompatActivity {
     private Handler updateHandler = new Handler();
     private Menu mainMenu;
 
-    private Intent serviceIntent;
+    private Intent bluetoothServiceIntent;
     private Intent posServiceIntent;
     private boolean recording = false;
     private long currentTime;
@@ -122,7 +122,7 @@ public class Main extends AppCompatActivity {
         LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(gpsStatusReceive, new IntentFilter("gpsStatusFilter"));
 
 
-        serviceIntent = new Intent(this, BluetoothService.class);
+        bluetoothServiceIntent = new Intent(this, BluetoothService.class);
 
         posServiceIntent = new Intent(this, PositionService.class);
         startService(posServiceIntent);
@@ -159,7 +159,7 @@ public class Main extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        stopService(serviceIntent);
+        stopService(bluetoothServiceIntent);
         stopService(posServiceIntent);
     }
 
@@ -224,42 +224,43 @@ public class Main extends AppCompatActivity {
 
         switch (item.getItemId()) {
             case R.id.disconnect:
-                stopService(serviceIntent);
+                if (!recording) {
+                    stopService(bluetoothServiceIntent);
 
-                final ProgressDialog disconnectingDialog = new ProgressDialog(Main.this);
-                disconnectingDialog.setMessage("Disconnecting...");
-                disconnectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-                disconnectingDialog.setCancelable(false);
-                disconnectingDialog.show();
-                disconDialog = disconnectingDialog;
+                    final ProgressDialog disconnectingDialog = new ProgressDialog(Main.this);
+                    disconnectingDialog.setMessage("Disconnecting...");
+                    disconnectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                    disconnectingDialog.setCancelable(false);
+                    disconnectingDialog.show();
+                    disconDialog = disconnectingDialog;
 
 
-                final DisconnectHandlerClass disconnectHandler = new DisconnectHandlerClass(this);
+                    final DisconnectHandlerClass disconnectHandler = new DisconnectHandlerClass(this);
 
-//                final Handler disconnectHandler = new Handler(){
-//                    @Override
-//                    public void handleMessage(Message msg) {
-//                        disconnectingDialog.dismiss();
-//                        disconnectThread.interrupt();
-//                        Intent bluetoothIntent = new Intent(Main.this, BluetoothConnectionList.class);
-//                        Main.this.startActivity(bluetoothIntent);
-//                        Main.this.finish();
-//                    }
-//                };
+                    //                final Handler disconnectHandler = new Handler(){
+                    //                    @Override
+                    //                    public void handleMessage(Message msg) {
+                    //                        disconnectingDialog.dismiss();
+                    //                        disconnectThread.interrupt();
+                    //                        Intent bluetoothIntent = new Intent(Main.this, BluetoothConnectionList.class);
+                    //                        Main.this.startActivity(bluetoothIntent);
+                    //                        Main.this.finish();
+                    //                    }
+                    //                };
 
-                disconnectThread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        int stop = 0;
-                        while(stop == 0) {
-                            stop = getDisconnect();
-                            sleep(1500);
+                    disconnectThread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            int stop = 0;
+                            while (stop == 0) {
+                                stop = getDisconnect();
+                                sleep(1500);
+                            }
+                            disconnectHandler.sendEmptyMessage(0);
                         }
-                        disconnectHandler.sendEmptyMessage(0);
-                    }
-                });
-                disconnectThread.start();
-
+                    });
+                    disconnectThread.start();
+                }
                 return true;
 
             case R.id.record_data:
@@ -296,9 +297,10 @@ public class Main extends AppCompatActivity {
                 return true;
 
             case R.id.vr_menu:
-                Intent vrIntent = new Intent(Main.this, VRmenuMap.class);
-                Main.this.startActivity(vrIntent);
-
+                if (!recording) {
+                    Intent vrIntent = new Intent(Main.this, VRmenuMap.class);
+                    Main.this.startActivity(vrIntent);
+                }
                 return true;
 
             default:
