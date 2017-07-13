@@ -44,13 +44,15 @@ import java.util.ArrayList;
  * An activity that displays a list of available bluetooth devices.
  */
 
-public class BluetoothConnectionList extends AppCompatActivity{
+public class BluetoothConnectionList extends AppCompatActivity
+{
 
+    //The variable TAG is just for testing purposes.
     private static final String TAG = BluetoothConnectionList.class.getSimpleName();
-
 
     private ListAdapter ListAdapter;
     private BluetoothAdapter bluetoothAdapter;
+
     private boolean mScanning;
     private Handler mHandler;
 
@@ -59,74 +61,125 @@ public class BluetoothConnectionList extends AppCompatActivity{
     private ArrayList<BluetoothDevice> bDevices = new ArrayList<>();
 
     private static final long SCAN_PERIOD = 5000;
+
     public static final String EXTRA_FILES = "dataset_list";
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_bluetooth_connection);
 
         ListView bluetoothList;
         bluetoothList = (ListView) findViewById(R.id.bluetoothList);
-        ListAdapter = new BluetoothConnectionListAdapter(this, bluetoothAddress, bluetoothName, bDevices);
         bluetoothList.setAdapter(ListAdapter);
+
+        ListAdapter = new BluetoothConnectionListAdapter(this,
+                                                         bluetoothAddress,
+                                                         bluetoothName,
+                                                         bDevices);
 
         BluetoothManager bluetoothManager;
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+
         bluetoothAdapter = bluetoothManager.getAdapter();
+
         mHandler = new Handler();
 
         File topLevelDir, jsonDir, objDir;
 
         //Creating the directory structure for the app.
         topLevelDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor");
+
         jsonDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Json");
+
         objDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj");
 
-        if(!topLevelDir.exists()) {
+
+        if(!topLevelDir.exists())
+        {
+
             if(!topLevelDir.mkdir())
+            {
                 Log.d(TAG, "Creating top level directory failed.");
+            }
 
-            if (!jsonDir.exists()) {
+            if (!jsonDir.exists())
+            {
+
                 if(!jsonDir.mkdir())
+                {
                     Log.d(TAG, "Creating json directory failed.");
+                }
             }
 
-            if (!objDir.exists()) {
+            if (!objDir.exists())
+            {
+
                 if(!objDir.mkdir())
+                {
                     Log.d(TAG, "Creating obj directory failed.");
+                }
             }
-        } else if(!jsonDir.exists()) {
+        }
+        else if(!jsonDir.exists())
+        {
+
             if(!jsonDir.mkdir())
+            {
                 Log.d(TAG, "Creating json directory failed.");
-
-            if(!objDir.exists()) {
-                if(!objDir.mkdir())
-                    Log.d(TAG, "Creating obj directory failed.");
             }
-        } else if(!objDir.exists()) {
+
+            if(!objDir.exists())
+            {
+
+                if(!objDir.mkdir())
+                {
+                    Log.d(TAG, "Creating obj directory failed.");
+                }
+            }
+        }
+        else if(!objDir.exists())
+        {
+
             if(!objDir.mkdir())
+            {
                 Log.d(TAG, "Creating obj directory failed.");
+            }
         }
 
 
-        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()) {
+        if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled())
+        {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+
             final int REQUEST_ENABLE_BT = 1;
+
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-        int permissionCheckLocation = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
-        int permissionCheckWrite = ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        int permissionCheckLocation = ContextCompat.
+                checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
+
+
+
+        int permissionCheckWrite = ContextCompat.
+                checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
 
         if(permissionCheckLocation != PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 0);
         }
+
         if(permissionCheckWrite != PackageManager.PERMISSION_GRANTED)
         {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 0);
         }
 
         scanLeDevice(true);
@@ -134,19 +187,27 @@ public class BluetoothConnectionList extends AppCompatActivity{
 
 
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
+            new BluetoothAdapter.LeScanCallback()
+            {
                 @Override
                 public void onLeScan(final BluetoothDevice device, int rssi,
-                                     byte[] scanRecord) {
-                    runOnUiThread(new Runnable() {
+                                     byte[] scanRecord)
+                {
+                    runOnUiThread(new Runnable()
+                    {
                         @Override
-                        public void run() {
+                        public void run()
+                        {
                             if(!bDevices.contains(device))
                             {
                                 bluetoothAddress.add(device.getAddress());
+
                                 bluetoothName.add(device.getName());
+
                                 bDevices.add(device);
+
                                 device.getBondState();
+
                                 ((BaseAdapter)ListAdapter).notifyDataSetChanged();
                             }
                         }
@@ -155,46 +216,60 @@ public class BluetoothConnectionList extends AppCompatActivity{
             };
 
 
-
-    private void scanLeDevice(final boolean enable) {
-        if (enable) {
+    private void scanLeDevice(final boolean enable)
+    {
+        if (enable)
+        {
             // Stops scanning after a pre-defined scan period.
-            mHandler.postDelayed(new Runnable() {
+            mHandler.postDelayed(new Runnable()
+            {
                 @Override
-                public void run() {
+                public void run()
+                {
                     mScanning = false;
                     bluetoothAdapter.stopLeScan(mLeScanCallback);
                 }
+
             }, SCAN_PERIOD);
+
 
             mScanning = true;
             bluetoothAdapter.startLeScan(mLeScanCallback);
-        } else {
+        }
+        else
+        {
             mScanning = false;
             bluetoothAdapter.stopLeScan(mLeScanCallback);
         }
     }
 
 
-
     @Override
-    public boolean onCreateOptionsMenu(Menu menu){
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
         getMenuInflater().inflate(R.menu.bluetooth_refresh, menu);
         return true;
     }
 
+
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch(item.getItemId()) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch(item.getItemId())
+        {
+
             case android.R.id.home :
+
                 finish();
                 return true;
 
             case R.id.refresh:
+
                 //This space is for the functionality of the bluetooth refresh menu button.
                 bluetoothName.clear();
                 bluetoothAddress.clear();
                 bDevices.clear();
+
                 ((BaseAdapter)ListAdapter).notifyDataSetChanged();
 
                 if(!mScanning)
@@ -209,22 +284,27 @@ public class BluetoothConnectionList extends AppCompatActivity{
                     Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
                 }
+
                 return true;
 
-
             case R.id.vr_menu_start:
+
                 Intent vrIntent = new Intent(this, VRmenuMap.class);
                 BluetoothConnectionList.this.startActivity(vrIntent);
 
                 return true;
 
             default:
+
                 return super.onOptionsItemSelected(item);
         }
     }
 
+
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
+
         super.onDestroy();
     }
 }

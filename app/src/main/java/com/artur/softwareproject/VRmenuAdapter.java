@@ -38,32 +38,43 @@ import java.util.ArrayList;
 import static android.os.SystemClock.sleep;
 
 
-class VRmenuAdapter extends ArrayAdapter<String> {
-
+class VRmenuAdapter extends ArrayAdapter<String>
+{
     private static final String TAG = VRmenuAdapter.class.getSimpleName();
 
     private ArrayList<String> fileNames;
+
     private AppCompatActivity context;
+
     private File jsonForDelete, objForDelete;
+
     private int currentPosition;
 
-    VRmenuAdapter(AppCompatActivity context, ArrayList<String> fileNames){
+    VRmenuAdapter(AppCompatActivity context, ArrayList<String> fileNames)
+    {
         super(context, R.layout.vr_menu_list_pattern, fileNames);
+
         this.fileNames = fileNames;
         this.context = context;
+
         currentPosition = 0;
     }
 
-    private static class VrViewHolder {
+
+    private static class VrViewHolder
+    {
         private TextView sessionName;
         private TextView sessionCount;
     }
 
+
     @Override @NonNull
-    public View getView(final int position, View convertView, @NonNull ViewGroup parent) {
+    public View getView(final int position, View convertView, @NonNull ViewGroup parent)
+    {
         VrViewHolder mVrViewHolder;
 
-        if (convertView == null) {
+        if (convertView == null)
+        {
             mVrViewHolder = new VrViewHolder();
 
             LayoutInflater ListInflater = LayoutInflater.from(getContext());
@@ -73,45 +84,74 @@ class VRmenuAdapter extends ArrayAdapter<String> {
             mVrViewHolder.sessionCount = (TextView) convertView.findViewById(R.id.sessionCount);
 
             convertView.setTag(mVrViewHolder);
-        } else {
+        }
+        else
+        {
             mVrViewHolder = (VrViewHolder) convertView.getTag();
         }
 
 
         String sessionNo = "Session " + (position+1);
+
         mVrViewHolder.sessionCount.setText(sessionNo);
         mVrViewHolder.sessionName.setText(fileNames.get(position));
 
-        convertView.setOnClickListener(new View.OnClickListener() {
+        convertView.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
 
                 String json = fileNames.get(position).split("\\.")[0];
 
-                File objFile = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames.get(position).replace("json", "obj"));
-                File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" + fileNames.get(position));
+                File objFile = new File(baseDirectory + "/ViSensor/OBJ/" +
+                        fileNames.get(position).replace("json", "obj"));
 
-                String requestURL = String.format("http://localhost:8080/index.html?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
+                File jsonFile = new File(baseDirectory + "/ViSensor/JSON/" +
+                        fileNames.get(position));
 
-                if (!jsonFile.exists()) {
+                String requestURL =
+                        String.format("http://localhost:8080/index.html?file=%s?sensor=%s",
+                                Uri.encode(json), Uri.encode("illuminance"));
+
+                if (!jsonFile.exists())
+                {
                     Log.d(TAG, "JSON file was not found.");
-                    Toast.makeText(context.getApplicationContext(), "json file was not found.", Toast.LENGTH_LONG).show();
-                    remove(getItem(position));
-                    notifyDataSetChanged();
-                    objForDelete = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames.get(position).replace("json", "obj"));
-                    if (objForDelete.exists()) {//obj file without a json file is useless and can be deleted.
-                        if (!objForDelete.delete())
-                            Log.d(TAG, "Deleting obj file failed.");
-                    }
 
-                } else {
-                    if (!objFile.exists()) {
-                        Toast.makeText(context.getApplicationContext(), "obj file was not found.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context.getApplicationContext(), "json file was not found.",
+                            Toast.LENGTH_LONG).show();
+
+                    remove(getItem(position));
+
+                    notifyDataSetChanged();
+
+                    objForDelete = new File(baseDirectory + "/ViSensor/OBJ/" +
+                            fileNames.get(position).replace("json", "obj"));
+
+                    //obj file without a json file is useless and can be deleted.
+                    if (objForDelete.exists())
+                    {
+                        if (!objForDelete.delete())
+                        {
+                            Log.d(TAG, "Deleting obj file failed.");
+                        }
+                    }
+                }
+                else
+                {
+                    if (!objFile.exists())
+                    {
+                        Toast.makeText(context.getApplicationContext(), "obj file was not found.",
+                                Toast.LENGTH_LONG).show();
+
                         Log.d(TAG, "OBJ file was not found");
+
                         sleep(1000);//Some time to read the message.
                     }
+
                     Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
+
                     webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
                     webVRIntent.setData(Uri.parse(requestURL));
                     webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -120,18 +160,22 @@ class VRmenuAdapter extends ArrayAdapter<String> {
 
                     context.startActivity(webVRIntent);
                 }
-
-
             }
         });
 
         //Used to delete files.
-        convertView.setOnLongClickListener(new View.OnLongClickListener() {
+        convertView.setOnLongClickListener(new View.OnLongClickListener()
+        {
             @Override
-            public boolean onLongClick(View v) {
+            public boolean onLongClick(View v)
+            {
                 String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
-                objForDelete = new File(baseDirectory + "/ViSensor/OBJ/" + fileNames.get(position).replace("json", "obj"));
-                jsonForDelete = new File(baseDirectory + "/ViSensor/JSON/" + fileNames.get(position));
+
+                objForDelete = new File(baseDirectory + "/ViSensor/OBJ/" +
+                        fileNames.get(position).replace("json", "obj"));
+
+                jsonForDelete = new File(baseDirectory + "/ViSensor/JSON/" +
+                        fileNames.get(position));
 
                 currentPosition = position;
                 showDelDialog();
@@ -143,30 +187,41 @@ class VRmenuAdapter extends ArrayAdapter<String> {
         return convertView;
     }
 
-    private void showDelDialog() {
-        DialogFragment delDialog = new FileDeleteDialog();
-        notifyDataSetChanged();
-        delDialog.show(context.getFragmentManager(), "FileDeleteDialog");
 
+    private void showDelDialog()
+    {
+        DialogFragment delDialog = new FileDeleteDialog();
+
+        notifyDataSetChanged();
+
+        delDialog.show(context.getFragmentManager(), "FileDeleteDialog");
     }
 
-    void onDialogPositiveClick() {
+
+    void onDialogPositiveClick()
+    {
         Log.d(TAG, "VRmenuAdapter onPositiveClick: Check.");
 
-        if (jsonForDelete.exists()) {//delete json file
+        //delete json file
+        if (jsonForDelete.exists())
+        {
             if (!jsonForDelete.delete())
                 Log.d(TAG, "Deleting json file failed.");
         }
 
-        if (objForDelete.exists()) {//delete obj file
+        //delete obj file
+        if (objForDelete.exists())
+        {
             if (!objForDelete.delete())
+            {
                 Log.d(TAG, "Deleting obj file failed.");
+            }
         }
 
         remove(getItem(currentPosition));
+
         notifyDataSetChanged();
     }
-
 }
 
 //EOF
