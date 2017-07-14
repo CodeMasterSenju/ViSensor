@@ -75,7 +75,6 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
                                    ArrayList<String> bluetoothName,
                                    ArrayList<BluetoothDevice> bDevices)
     {
-
         super(context, R.layout.activity_bluetooth_connection, bluetoothAddress);
 
         this.bluetoothAddress = bluetoothAddress;
@@ -92,18 +91,15 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
 
         BroadcastReceiver connectedReceive = new BroadcastReceiver()
         {
-
             @Override
             public void onReceive(Context context, Intent intent)
             {
-
                 connected = (int)intent.getExtras().get("connected");
-
-                Log.d(TAG, "RECEIVE : " + connected);
             }
         };
 
-        LocalBroadcastManager.getInstance(context).registerReceiver(connectedReceive, new IntentFilter("connectedFilter"));
+        LocalBroadcastManager.getInstance(context).
+                registerReceiver(connectedReceive, new IntentFilter("connectedFilter"));
     }
 
 
@@ -113,10 +109,9 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
     }
 
 
-    private static class ViewHolder {
-
+    private static class ViewHolder
+    {
         private TextView bluetoothConnectionName;
-
         private TextView bluetoothConnectionStatus;
     }
 
@@ -141,18 +136,17 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
 
             if (target.timeout)
             {
-                target.contextActivity.stopService(target.bluetoothServiceIntent); //The BluetoothService needs to be stopped if connecting timed out.
+                //The BluetoothService needs to be stopped if connecting timed out.
+                target.contextActivity.stopService(target.bluetoothServiceIntent);
 
-                target.timeout = false; //Reset timeout variable to try connecting again.
+                //Reset timeout variable to try connecting again.
+                target.timeout = false;
             }
             else
             {
                 target.mainIntent = new Intent(target.contextActivity, Main.class);
-
                 target.contextActivity.startActivity(target.mainIntent);
-
                 target.connectThread.interrupt();
-
                 target.connected = 0;
 
                 Log.d(TAG, "THREAD INTERRUPTED " + target.connectThread.getState());
@@ -166,7 +160,6 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
     @Override @NonNull
     public View getView(final int position, View convertView, @NonNull ViewGroup parent)
     {
-
         ViewHolder mViewHolder;
 
         if (convertView == null)
@@ -177,19 +170,19 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
 
             convertView = ListInflater.inflate(R.layout.bluetooth_list_pattern, parent, false);
 
-            mViewHolder.bluetoothConnectionName = (TextView) convertView.findViewById(R.id.bluetooth_connection_name);
-            mViewHolder.bluetoothConnectionStatus = (TextView) convertView.findViewById(R.id.bluetooth_connection_status);
+            mViewHolder.bluetoothConnectionName = (TextView) convertView.
+                    findViewById(R.id.bluetooth_connection_name);
+
+            mViewHolder.bluetoothConnectionStatus = (TextView) convertView.
+                    findViewById(R.id.bluetooth_connection_status);
 
             convertView.setTag(mViewHolder);
-
-            //final ConnectionHandlerClass connectHandler = new ConnectionHandlerClass(this);
 
             convertView.setOnClickListener(new View.OnClickListener()
             {
                 @Override
                 public void onClick(View v)
                 {
-
                     //What happens if you press on the list items at the bluetooth activity.
                     Animation animation = new AlphaAnimation(0.3f, 1.0f);
 
@@ -198,7 +191,6 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
                     v.startAnimation(animation);
 
                     intent = new Intent(contextActivity, BluetoothService.class);
-
                     intent.putExtra("device", bDevices.get(position));
                     intent.putExtra("deviceList", bDevices);
 
@@ -213,13 +205,14 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
                     connectingDialog.setCancelable(false);
                     connectingDialog.show();
 
-                    final ConnectionHandlerClass connectHandler = new ConnectionHandlerClass(bclaReference);
+                    final ConnectionHandlerClass connectHandler =
+                            new ConnectionHandlerClass(bclaReference);
 
                     connectThread = new Thread(new Runnable()
                     {
                         @Override
-                        public void run() {
-
+                        public void run()
+                        {
                             int stop = 0;
                             int counter = 0;
 
@@ -231,7 +224,8 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String>
                                 sleep(2000);
                             }
 
-                            if (stop == 0 && counter == 4)//Timeout occurred after 10s of waiting and stop is still 0.
+                            //Timeout occurred after 10s of waiting and stop is still 0.
+                            if (stop == 0 && counter == 4)
                             {
                                 timeout = true;
                             }
