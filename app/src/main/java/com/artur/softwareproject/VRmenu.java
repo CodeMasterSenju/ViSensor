@@ -11,7 +11,9 @@ import android.widget.ListView;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 
 import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
 
@@ -20,7 +22,8 @@ import static com.artur.softwareproject.BluetoothConnectionList.EXTRA_FILES;
  * A menu to display recorded sessions in a list.
  */
 
-public class VRmenu extends AppCompatActivity{
+public class VRmenu extends AppCompatActivity
+{
 
     private static final String TAG = VRmenu.class.getSimpleName();
 
@@ -51,14 +54,14 @@ public class VRmenu extends AppCompatActivity{
 
         String[] fileNames = getIntent().getStringArrayExtra(EXTRA_FILES);
 
-        if(fileNames == null)
+        if (fileNames == null)
         {
-            Collections.addAll(sessionFileList, pathName.list());
+            fileNames = pathName.list();
         }
-        else
-        {
-            Collections.addAll(sessionFileList, fileNames);
-        }
+
+        Arrays.sort(fileNames,Collections.<String>reverseOrder());
+
+        Collections.addAll(sessionFileList, fileNames);
 
         webServerIntent = new Intent(this, SimpleWebServer.class);
 
@@ -84,7 +87,7 @@ public class VRmenu extends AppCompatActivity{
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        if (item.getItemId() == android.R.id.home )
+        if (item.getItemId() == android.R.id.home)
         {
             finish();
 
