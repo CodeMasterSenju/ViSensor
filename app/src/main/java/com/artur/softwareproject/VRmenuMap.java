@@ -76,6 +76,20 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback,
         sessionFileNames = pathName.list();
     }
 
+    @Override
+    protected void onResume()
+    {
+        //refresh the markers if mMap is already initialized
+        super.onResume();
+        if(mMap != null)
+        {
+            sessionFileNames = pathName.list();
+            mClusterManager.clearItems();
+            addItems();
+            mClusterManager.cluster();
+        }
+    }
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
@@ -149,9 +163,13 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback,
         // Add cluster items (markers) to the cluster manager.
         addItems();
 
+        //position camera so that all markers are visible
         positionCamera();
     }
 
+    /**
+     * Add a Marker for every .json file
+     */
     private void addItems()
     {
         String baseDirectory = Environment.getExternalStorageDirectory().getAbsolutePath();
@@ -203,6 +221,11 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback,
         return  false;  // default onClusterItemClicked is called after
     }
 
+    /**
+     *
+     * @param f .json file
+     * @return get the latitude and longitude saved in the passed .json file
+     */
     private LatLng getLatLng(File f)
     {
         try
