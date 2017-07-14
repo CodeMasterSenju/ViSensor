@@ -707,7 +707,7 @@ class ModelConstructor
       
         double extraSpace = 2000;
         double extraSpaceNear = 10;
-        double textureConstant = 10;
+        double textureConstant = 3;
         ArrayList<int[]> floorPlanes = new ArrayList<>();
 
         Vector3D avg = getAverage(vectors);
