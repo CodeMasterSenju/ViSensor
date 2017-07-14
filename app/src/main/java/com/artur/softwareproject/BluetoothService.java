@@ -55,7 +55,9 @@ public class BluetoothService extends Service{
     private final UUID UUID_OPT_CONF = fromString("f000aa72-0451-4000-b000-000000000000"); // 0: disable, 1: enable
 
     private BluetoothGatt mBluetoothGatt;
+
     private Intent serviceIntent;
+
     private int init;
 
     private BluetoothGattCharacteristic tempData;
@@ -67,8 +69,8 @@ public class BluetoothService extends Service{
     private BluetoothGattCharacteristic optData;
     private BluetoothGattCharacteristic optConf;
 
-    public BluetoothService(){
-
+    public BluetoothService()
+    {
         init = 0;
     }
 
@@ -297,7 +299,6 @@ public class BluetoothService extends Service{
                                               BluetoothGattDescriptor descriptor,
                                               int status)
                 {
-
                     if(init == 0)
                     {
                         BluetoothGattDescriptor humDescriptor = humData.getDescriptor(UUID_NOT);
