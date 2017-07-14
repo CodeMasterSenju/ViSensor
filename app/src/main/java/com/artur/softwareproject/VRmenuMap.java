@@ -260,8 +260,11 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback,
     public void onClusterInfoWindowClick(Cluster<GeoItem> cluster)
     {
         String[] filenames = new String[cluster.getSize()];
+
         Collection<GeoItem> items = cluster.getItems();
+
         int i = 0;
+
         for (GeoItem item : items)
         {
             filenames[i] = item.getFilename();
@@ -270,7 +273,9 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback,
 
         //Start VRmenu with the selected dataSets
         Intent vrIntent = new Intent(this, VRmenu.class);
+
         vrIntent.putExtra(EXTRA_FILES, filenames);
+
         VRmenuMap.this.startActivity(vrIntent);
     }
 
@@ -289,6 +294,7 @@ public class VRmenuMap extends AppCompatActivity implements OnMapReadyCallback,
         String requestURL = String.format("http://localhost:8080/index.html?file=%s?sensor=%s", Uri.encode(json), Uri.encode("illuminance"));
 
         Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
+
         webVRIntent.addCategory(Intent.CATEGORY_BROWSABLE);
         webVRIntent.setData(Uri.parse(requestURL));
         webVRIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

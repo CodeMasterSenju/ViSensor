@@ -23,7 +23,8 @@ package com.artur.softwareproject;
  * A simple Kalman-Filter that is very good at filtering out noise.
  */
 
-class SimpleKalmanFilter {
+class SimpleKalmanFilter
+{
     /*
    Filter parameters
    xk:   current guess
@@ -71,8 +72,12 @@ class SimpleKalmanFilter {
         xk = xk + kk * (input - xk);
         pk = (1-kk) * pk_1;
 
-        if (first) { //The first input bypasses the filter. This way other variables further down the line can be initialized with non zero values.
+        //The first input bypasses the filter.
+        //This way other variables further down the line can be initialized with non zero values.
+        if (first)
+        {
             first = false;
+
             return input;
         }
 
