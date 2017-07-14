@@ -59,7 +59,8 @@ import java.net.SocketException;
  * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This
  * server handles one request at a time. It only supports GET method.
  */
-public class SimpleWebServer extends Service implements Runnable {
+public class SimpleWebServer extends Service implements Runnable
+{
 
     private static final String TAG = "SimpleWebServer";
 
@@ -86,22 +87,30 @@ public class SimpleWebServer extends Service implements Runnable {
     /**
      * This method starts the web server listening to the specified port.
      */
-    public void start() {
+    public void start()
+    {
         mIsRunning = true;
+
         new Thread(this).start();
     }
 
     /**
      * This method stops the web server
      */
-    public void stop() {
-        try {
+    public void stop()
+    {
+        try
+        {
             mIsRunning = false;
-            if (null != mServerSocket) {
+
+            if (null != mServerSocket)
+            {
                 mServerSocket.close();
                 mServerSocket = null;
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             Log.e(TAG, "Error closing the server socket.", e);
         }
     }
@@ -113,20 +122,31 @@ public class SimpleWebServer extends Service implements Runnable {
 //    public boolean getRunning() { return mIsRunning; }
 
     @Override
-    public void run() {
-        try {
+    public void run()
+    {
+        try
+        {
             mServerSocket = new ServerSocket(mPort);
-            while (mIsRunning) {
+
+            while (mIsRunning)
+            {
                 Socket socket = mServerSocket.accept();
+
                 handle(socket);
+
                 socket.close();
             }
-        } catch (SocketException e) {
+        }
+        catch (SocketException e)
+        {
             // The server was stopped; ignore.
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             Log.e(TAG, "Web server error.", e);
         }
     }
+
 
     /**
      * Respond to a request from a client.
@@ -134,20 +154,30 @@ public class SimpleWebServer extends Service implements Runnable {
      * @param socket The client socket.
      * @throws IOException "please put here a description, Jean"
      */
-    private void handle(Socket socket) throws IOException {
+    private void handle(Socket socket) throws IOException
+    {
         BufferedReader reader = null;
         PrintStream output = null;
+
         try {
             String route = null;
 
             // Read HTTP headers and parse out the route.
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
             String line;
-            while (!TextUtils.isEmpty(line = reader.readLine())) {
-                if (line.startsWith("GET /")) {
+
+            while (!TextUtils.isEmpty(line = reader.readLine()))
+            {
+                if (line.startsWith("GET /"))
+                {
                     int start = line.indexOf('/') + 1;
-                    int end = line.indexOf('?', start) == -1 ? line.indexOf(' ', start) : line.indexOf('?', start);
+
+                    int end = line.indexOf('?', start) == -1 ?
+                            line.indexOf(' ', start) : line.indexOf('?', start);
+
                     route = line.substring(start, end);
+
                     break;
                 }
             }
@@ -156,13 +186,19 @@ public class SimpleWebServer extends Service implements Runnable {
             output = new PrintStream(socket.getOutputStream());
 
             // Prepare the content to send.
-            if (null == route) {
+            if (null == route)
+            {
                 writeServerError(output);
+
                 return;
             }
+
             byte[] bytes = loadContent(route);
-            if (null == bytes) {
+
+            if (null == bytes)
+            {
                 writeServerError(output);
+
                 return;
             }
 
@@ -171,27 +207,36 @@ public class SimpleWebServer extends Service implements Runnable {
             output.println("Content-Type: " + detectMimeType(route));
             output.println("Content-Length: " + bytes.length);
             output.println();
+
             output.write(bytes);
+
             output.flush();
-        } finally {
-            if (null != output) {
+        }
+        finally
+        {
+            if (null != output)
+            {
                 output.close();
             }
-            if (null != reader) {
+            if (null != reader)
+            {
                 reader.close();
             }
         }
     }
+
 
     /**
      * Writes a server error response (HTTP/1.0 500) to the given output stream.
      *
      * @param output The output stream.
      */
-    private void writeServerError(PrintStream output) {
+    private void writeServerError(PrintStream output)
+    {
         output.println("HTTP/1.0 500 Internal Server Error");
         output.flush();
     }
+
 
     /**
      * Loads all the content of {@code fileName}.
@@ -207,41 +252,66 @@ public class SimpleWebServer extends Service implements Runnable {
         //    File file = new File(baseDirectory + "/ViSensor/" + fileName);
         //    input = new FileInputStream(file);
         //} else {
-        try {
+        try
+        {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
+
             String slittedString[] = fileName.split("\\.");
             String fileEnding = "";
-            if (slittedString.length > 1)
-                fileEnding = slittedString[slittedString.length - 1];
 
-            if (fileEnding.equals("json") || fileEnding.equals("obj")) {
+            if (slittedString.length > 1)
+            {
+                fileEnding = slittedString[slittedString.length - 1];
+            }
+
+            if (fileEnding.equals("json") || fileEnding.equals("obj"))
+            {
                 File baseDirectory = Environment.getExternalStorageDirectory();
+
                 File file;
 
                 if (fileEnding.equals("json"))
+                {
                     file = new File(baseDirectory, "/ViSensor/Json/" + fileName);
+                }
                 else
+                {
                     file = new File(baseDirectory, "/ViSensor/Obj/" + fileName);
+                }
 
                 input = new FileInputStream(file);
-            } else
+            }
+            else
+            {
                 input = mAssets.open(fileName);
+            }
 
             byte[] buffer = new byte[1024];
+
             int size;
-            while (-1 != (size = input.read(buffer))) {
+
+            while (-1 != (size = input.read(buffer)))
+            {
                 output.write(buffer, 0, size);
             }
+
             output.flush();
+
             return output.toByteArray();
-        } catch (FileNotFoundException e) {
+        }
+        catch (FileNotFoundException e)
+        {
             return null;
-        } finally {
-            if (null != input) {
+        }
+        finally
+        {
+            if (null != input)
+            {
                 input.close();
             }
         }
     }
+
 
     /**
      * Detects the MIME type from the {@code fileName}.
@@ -249,40 +319,61 @@ public class SimpleWebServer extends Service implements Runnable {
      * @param fileName The name of the file.
      * @return A MIME type.
      */
-    private String detectMimeType(String fileName) {
-        if (TextUtils.isEmpty(fileName)) {
+    private String detectMimeType(String fileName)
+    {
+        if (TextUtils.isEmpty(fileName))
+        {
             return null;
-        } else if (fileName.endsWith(".html")) {
+        }
+        else if (fileName.endsWith(".html"))
+        {
             return "text/html";
-        } else if (fileName.endsWith(".js")) {
+        }
+        else if (fileName.endsWith(".js"))
+        {
             return "application/javascript";
-        } else if (fileName.endsWith(".css")) {
+        }
+        else if (fileName.endsWith(".css"))
+        {
             return "text/css";
-        } else {
+        }
+        else
+        {
             return "application/octet-stream";
         }
     }
 
+
     @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         return null;
     }
 
+
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
         // Let it continue running until it is stopped.
         mPort = 8080;
         mAssets = this.getAssets();
+
         start();
+
         Log.d(TAG, "Service started");
+
         return START_STICKY;
     }
 
+
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         stop();
+
         super.onDestroy();
+
         Log.d(TAG, "Service stopped");
     }
 }

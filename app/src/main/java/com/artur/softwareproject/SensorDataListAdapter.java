@@ -45,6 +45,7 @@ class SensorDataListAdapter extends ArrayAdapter<String> {
 
     private final String[] dataTypes;
     private final String[] dataUnits;
+
     private static double[] dataValues = {0,0,0,0,0,0,0};
 
     private double temperature;
@@ -54,13 +55,13 @@ class SensorDataListAdapter extends ArrayAdapter<String> {
     private double yPos;
     private double zPos;
 
-
     private final static String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
 
 
-
-    SensorDataListAdapter(Activity context, String[] datenTypen, String[] datenEinheit) {
+    SensorDataListAdapter(Activity context, String[] datenTypen, String[] datenEinheit)
+    {
         super(context, R.layout.sensordata_list_pattern, datenTypen);
+
         this.dataTypes = datenTypen;
         this.dataUnits = datenEinheit;
 
@@ -70,20 +71,25 @@ class SensorDataListAdapter extends ArrayAdapter<String> {
         yPos = 0;
         zPos = 0;
 
-        BroadcastReceiver temperatureReceive = new BroadcastReceiver() {
+        BroadcastReceiver temperatureReceive = new BroadcastReceiver()
+        {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent)
+            {
                 temperature = (double)intent.getExtras().get("ambientTemperature");
 
             }
         };
 
-        BroadcastReceiver gpsReceive = new BroadcastReceiver() {
+        BroadcastReceiver gpsReceive = new BroadcastReceiver()
+        {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent)
+            {
                 double[] gps = (double[])intent.getExtras().get("gpsDistance");
 
-                if(gps == null) {
+                if(gps == null)
+                {
                     Log.d(TAG,"Error while receiving gpsDistance.");
                     return;
                 }
@@ -93,23 +99,29 @@ class SensorDataListAdapter extends ArrayAdapter<String> {
             }
         };
 
-        BroadcastReceiver baroReceive = new BroadcastReceiver() {
+        BroadcastReceiver baroReceive = new BroadcastReceiver()
+        {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent)
+            {
                 zPos = (double)intent.getExtras().get("hDiff");
             }
         };
 
-        BroadcastReceiver humidityReceive = new BroadcastReceiver() {
+        BroadcastReceiver humidityReceive = new BroadcastReceiver()
+        {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent)
+            {
                 humidity = (double)intent.getExtras().get("humidity");
             }
         };
 
-        BroadcastReceiver opticalReceive = new BroadcastReceiver() {
+        BroadcastReceiver opticalReceive = new BroadcastReceiver()
+        {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent)
+            {
                 illuminance = (double)intent.getExtras().get("light");
             }
         };
@@ -121,20 +133,27 @@ class SensorDataListAdapter extends ArrayAdapter<String> {
         LocalBroadcastManager.getInstance(context).registerReceiver(baroReceive, new IntentFilter("hDiffFilter"));
     }
 
-    private static class SensorViewHolder {
+
+    private static class SensorViewHolder
+    {
         private TextView dataItemName;
         private TextView dataItemType;
         private TextView dataItemValue;
     }
 
+
     @Override @NonNull
-    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+    public View getView(int position, View convertView, @NonNull ViewGroup parent)
+    {
 
         SensorViewHolder mViewHolder;
 
-        if (convertView == null) {
+        if (convertView == null)
+        {
             mViewHolder = new SensorViewHolder();
+
             LayoutInflater ListInflater = LayoutInflater.from(getContext());
+
             convertView = ListInflater.inflate(R.layout.sensordata_list_pattern, parent, false);
 
             mViewHolder.dataItemName = (TextView) convertView.findViewById(R.id.dataItemName);
@@ -142,8 +161,9 @@ class SensorDataListAdapter extends ArrayAdapter<String> {
             mViewHolder.dataItemValue = (TextView) convertView.findViewById(R.id.dataItemValue);
 
             convertView.setTag(mViewHolder);
-
-        } else {
+        }
+        else
+        {
             mViewHolder = (SensorViewHolder) convertView.getTag();
         }
 
@@ -159,23 +179,22 @@ class SensorDataListAdapter extends ArrayAdapter<String> {
         {
             mViewHolder.dataItemName.setText(dataTypes[position]);
             mViewHolder.dataItemType.setText(dataUnits[position]);
-            mViewHolder.dataItemValue.setText(String.format(Locale.GERMANY, "%1$, .2f", dataValues[position]));//Double.toString(dataValues[position]));
-        } else if(position == 3) {
+            mViewHolder.dataItemValue.setText(String.format(Locale.GERMANY, "%1$, .2f",
+                    dataValues[position]));//Double.toString(dataValues[position]));
+        }
+        else if(position == 3)
+        {
             mViewHolder.dataItemName.setText(dataTypes[3]);
 
-            mViewHolder.dataItemValue.setText("X : " + Double.toString(dataValues[3]) + " " + dataUnits[3] + "\n" +
-                                              "Y : " + Double.toString(dataValues[4]) + " " + dataUnits[3] + "\n" +
-                                              "Z : " + Double.toString(dataValues[5]) + " " + dataUnits[3]);
+            mViewHolder.dataItemValue.
+                    setText("X : " + Double.toString(dataValues[3]) + " " + dataUnits[3] + "\n" +
+                            "Y : " + Double.toString(dataValues[4]) + " " + dataUnits[3] + "\n" +
+                            "Z : " + Double.toString(dataValues[5]) + " " + dataUnits[3]);
         }
 
-//        customView.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                //What happens if you press on the list items at the main activity.
-//            }
-//        });
 
         return convertView;
     }
-
 }
+
+//EOF

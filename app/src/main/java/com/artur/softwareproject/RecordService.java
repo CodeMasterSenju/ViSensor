@@ -39,8 +39,8 @@ import java.util.GregorianCalendar;
 
 /**
  * Created by Martin Kern on 27.05.2017.
- * This service saves sensor data in a JSON file. It also records position data in an ArrayList and use
- * it to call the ModelConstructor.
+ * This service saves sensor data in a JSON file.
+ * It also records position data in an ArrayList and use it to call the ModelConstructor.
  */
 
 public class RecordService extends Service implements Runnable{
@@ -53,36 +53,56 @@ public class RecordService extends Service implements Runnable{
     private double illuminance;
     private double[] pos = {0,0,0};
     private double[] gpsStartingPos = {0,0};
-    private boolean bGps; //This variable is set true when the first gps coordinates are received.
-    private Runnable recService = this;
-    final private IBinder recordBinder = new LocalBinder();
-    final String path = "/ViSensor/Json";
 
+    private boolean bGps; //This variable is set true when the first gps coordinates are received.
     private boolean record = true;
     private boolean firstWrite = true;
 
-    private File jsonFile;
+    private Runnable recService = this;
+
+    final private IBinder recordBinder = new LocalBinder();
+
+    final String path = "/ViSensor/Json";
     private String fileName;
-    
-    private ArrayList<double[]> positionList; //Position data that is used by the ModelConstructor class
+
+    private File jsonFile;
+
+    //Position data that is used by the ModelConstructor class
+    private ArrayList<double[]> positionList;
 
     Handler recordHandler = new Handler();
 
+
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         return recordBinder;
     }
 
+
     @Override
-    public void onCreate() {
+    public void onCreate()
+    {
         super.onCreate();
+
         //Register BroadcastReceivers
-        LocalBroadcastManager.getInstance(this).registerReceiver(temperatureReceive, new IntentFilter("temperatureFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(humidityReceive, new IntentFilter("humidityFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(opticalReceive, new IntentFilter("lightFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(gpsReceive, new IntentFilter("gpsDistFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(baroReceive, new IntentFilter("hDiffFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(gpsRawReceive, new IntentFilter("gpsFilter"));
+        LocalBroadcastManager.getInstance(this).registerReceiver(temperatureReceive,
+                new IntentFilter("temperatureFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(humidityReceive,
+                new IntentFilter("humidityFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(opticalReceive,
+                new IntentFilter("lightFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(gpsReceive,
+                new IntentFilter("gpsDistFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(baroReceive,
+                new IntentFilter("hDiffFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(gpsRawReceive,
+                new IntentFilter("gpsFilter"));
 
         bGps = false;
 
@@ -90,6 +110,7 @@ public class RecordService extends Service implements Runnable{
         temperature = 0;
         humidity = 0;
         fileName = now();
+
         positionList = new ArrayList<>();
 
         //Directory, where thr JSON file is saved.
@@ -98,26 +119,35 @@ public class RecordService extends Service implements Runnable{
         Log.d(TAG, Environment.getExternalStorageDirectory() + path);
 
         //If the directory does not exist then create it.
-        if (!pathname.exists()) {
+        if (!pathname.exists())
+        {
             if (!pathname.mkdir())
+            {
                 Log.d(TAG, "Directory should have been created but wasn't.");
+            }
         }
     }
 
+
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         super.onDestroy();
     }
+
 
 //BroadcastReceiver=================================================================================
 //==================================================================================================
 
-    private BroadcastReceiver temperatureReceive = new BroadcastReceiver() {
+    private BroadcastReceiver temperatureReceive = new BroadcastReceiver()
+    {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent)
+        {
             temperature = (double)intent.getExtras().get("ambientTemperature");
         }
     };
+
 
     private BroadcastReceiver gpsRawReceive = new BroadcastReceiver() {
         @Override
@@ -133,21 +163,31 @@ public class RecordService extends Service implements Runnable{
             gpsStartingPos[0] = gpsRaw[0];
             gpsStartingPos[1] = gpsRaw[1];
 
-            if (!bGps) {
+            if (!bGps)
+            {
                 bGps = true;
 
                 //Create JSON file
-                jsonFile = new File(Environment.getExternalStorageDirectory() + path, fileName + ".json");
+                jsonFile = new File(Environment.getExternalStorageDirectory() + path,
+                        fileName + ".json");
 
                 //Write the beginning of the JSON file.
                 try {
                     if(!jsonFile.createNewFile())
+                    {
                         Log.d(TAG, "Failed to create a new json file.");
-                    BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-                    writer.write(   "{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[1] + ",\n" +
+                    }
+
+                    BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile,
+                            true /*append*/));
+
+                    writer.write("{\"coordinates\":{\n\"latitude\": " + gpsStartingPos[1] + ",\n" +
                             "\"longitude\": " + gpsStartingPos[0] + "\n},\n\"session\": [\n");
+
                     writer.close();
-                } catch (IOException e) {
+                }
+                catch (IOException e)
+                {
                     e.printStackTrace();
                 }
 
@@ -158,12 +198,16 @@ public class RecordService extends Service implements Runnable{
         }
     };
 
-    private BroadcastReceiver gpsReceive = new BroadcastReceiver() {
+
+    private BroadcastReceiver gpsReceive = new BroadcastReceiver()
+    {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent)
+        {
             double[] gps = (double[])intent.getExtras().get("gpsDistance");
 
-            if(gps == null) {
+            if(gps == null)
+            {
                 gps = new double[2];
                 gps[0] = 0;
                 gps[1] = 0;
@@ -174,23 +218,32 @@ public class RecordService extends Service implements Runnable{
         }
     };
 
-    private BroadcastReceiver baroReceive = new BroadcastReceiver() {
+
+    private BroadcastReceiver baroReceive = new BroadcastReceiver()
+    {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent)
+        {
             pos[2] = (double)intent.getExtras().get("hDiff");
         }
     };
 
-    private BroadcastReceiver humidityReceive = new BroadcastReceiver() {
+
+    private BroadcastReceiver humidityReceive = new BroadcastReceiver()
+    {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent)
+        {
             humidity = (double)intent.getExtras().get("humidity");
         }
     };
 
-    private BroadcastReceiver opticalReceive = new BroadcastReceiver() {
+
+    private BroadcastReceiver opticalReceive = new BroadcastReceiver()
+    {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent)
+        {
             illuminance = (double)intent.getExtras().get("light");
         }
     };
@@ -200,8 +253,10 @@ public class RecordService extends Service implements Runnable{
 //==================================================================================================
 
     //Creates a string that represents the current time.
-    private String now() {
+    private String now()
+    {
         GregorianCalendar now = new GregorianCalendar();
+
         String ret;
 
         String m = "" + (now.get(GregorianCalendar.MONTH)+1); //months start at 0
@@ -211,15 +266,29 @@ public class RecordService extends Service implements Runnable{
         String s = "" +  now.get(GregorianCalendar.SECOND);
 
         if (m.length() == 1)
+        {
             m = "0" + m;
+        }
+
         if (d.length() == 1)
+        {
             d = "0" + d;
+        }
+
         if (h.length() == 1)
+        {
             h = "0" + h;
+        }
+
         if (min.length() == 1)
+        {
             min = "0" + min;
+        }
+
         if (s.length() == 1)
+        {
             s = "0" + s;
+        }
 
         ret = ""   + now.get(GregorianCalendar.YEAR)
                 + "-" + m
@@ -231,8 +300,9 @@ public class RecordService extends Service implements Runnable{
         return ret;
     }
 
-    private String dataToJson() {
 
+    private String dataToJson()
+    {
         return    "  {\n"
                 + "    \"temperature\": " + Double.toString(temperature) + ",\n"
                 + "    \"humidity\": " + Double.toString(humidity) + ",\n"
@@ -243,8 +313,10 @@ public class RecordService extends Service implements Runnable{
                 + "  }";
     }
 
-    class LocalBinder extends Binder {
-        RecordService getService() {
+    class LocalBinder extends Binder
+    {
+        RecordService getService()
+        {
             // Return this instance of LocalService so clients can call public methods
             return RecordService.this;
         }
@@ -252,47 +324,72 @@ public class RecordService extends Service implements Runnable{
 
 
     @Override
-    public void run() {
+    public void run()
+    {
 
-        if (record) {
+        if (record)
+        {
 
             double[] tempPos = new double[3];
+
             tempPos[0] = pos[0];
             tempPos[1] = pos[1];
             tempPos[2] = pos[2];
 
             positionList.add(tempPos);
+
             String string = dataToJson();
 
-            try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
-                if (firstWrite) {
+            try
+            {
+                BufferedWriter writer =
+                        new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
+
+                if (firstWrite)
+                {
                     writer.write(string);
                     firstWrite = false;
-                } else {
+                }
+                else
+                    {
                     writer.write(",\n" + string);
                 }
 
                 writer.close();
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 e.printStackTrace();
             }
-        } else {//write the end of json file
-            try {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile, true /*append*/));
+        }
+        else
+        {//write the end of json file
+            try
+            {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(jsonFile,
+                        true /*append*/));
+
                 writer.write("\n]}");
                 writer.close();
-            } catch (IOException e) {
+            }
+            catch (IOException e)
+            {
                 e.printStackTrace();
             }
+
             return;
         }
+
         recordHandler.postDelayed(this, 1000); //run every second
     }
 
-    public boolean create3dModel() {
+
+    public boolean create3dModel()
+    {
         record = false;
+
         Log.d(TAG, "About to call modelConstructor");
+
         return ModelConstructor.createModel(positionList, fileName, false);
     }
 }

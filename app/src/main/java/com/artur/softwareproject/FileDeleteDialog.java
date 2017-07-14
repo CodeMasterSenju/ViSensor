@@ -29,22 +29,27 @@ import android.os.Bundle;
  * A popup to confirm file deletion.
  */
 
-public class FileDeleteDialog extends DialogFragment {
-
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
+public class FileDeleteDialog extends DialogFragment
+{
+    public Dialog onCreateDialog(Bundle savedInstanceState)
+    {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setMessage(R.string.del_dialog)
-                .setPositiveButton(R.string.del, new DialogInterface.OnClickListener() {
+                .setPositiveButton(R.string.del, new DialogInterface.OnClickListener()
+                {
                     public void onClick(DialogInterface dialog, int id) {
                         ((VRmenu)getActivity()).getAdapter().onDialogPositiveClick();//Delete file
                     }
                 })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int id)
+                    {
 
                     }
                 });
+
         // Create the AlertDialog object and return it
         return builder.create();
     }

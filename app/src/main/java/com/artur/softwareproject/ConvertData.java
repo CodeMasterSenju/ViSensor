@@ -26,19 +26,17 @@ import static java.lang.Math.pow;
 
 class ConvertData {
 
-    private static Integer shortUnsignedAtOffset(byte[] c, int offset) {
+    private static Integer shortUnsignedAtOffset(byte[] c, int offset)
+    {
         Integer lowerByte = (int) c[offset] & 0xFF;
         Integer upperByte = (int) c[offset+1] & 0xFF;
+
         return (upperByte << 8) + lowerByte;
     }
 
-//    public static Integer shortSignedAtOffset(byte[] c, int offset) {
-//        Integer lowerByte = (int) c[offset] & 0xFF;
-//        Integer upperByte = (int) c[offset+1]; // // Interpret MSB as signed
-//        return (upperByte << 8) + lowerByte;
-//    }
 
-    double extractLightIntensity(byte[] v){
+    double extractLightIntensity(byte[] v)
+    {
         int mantissa;
         int exponent;
 
@@ -55,14 +53,20 @@ class ConvertData {
         return (output / 100.0f);
     }
 
-    double extractHumidity(byte[] v){
+
+    double extractHumidity(byte[] v)
+    {
         int a = shortUnsignedAtOffset(v,2);
         a = a - (a % 4);
+
         return (-6f) + 125f * (a / 65535f);
     }
 
-    double extractAmbientTemperature(byte [] v) {
+
+    double extractAmbientTemperature(byte [] v)
+    {
         int offset = 2;
+
         return shortUnsignedAtOffset(v, offset) / 128.0;
     }
 }
