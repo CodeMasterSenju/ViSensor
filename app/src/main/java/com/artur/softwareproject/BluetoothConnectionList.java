@@ -74,12 +74,13 @@ public class BluetoothConnectionList extends AppCompatActivity
 
         ListView bluetoothList;
         bluetoothList = (ListView) findViewById(R.id.bluetoothList);
-        bluetoothList.setAdapter(ListAdapter);
 
         ListAdapter = new BluetoothConnectionListAdapter(this,
                                                          bluetoothAddress,
                                                          bluetoothName,
                                                          bDevices);
+
+        bluetoothList.setAdapter(ListAdapter);
 
         BluetoothManager bluetoothManager;
         bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -97,10 +98,8 @@ public class BluetoothConnectionList extends AppCompatActivity
 
         objDir = new File(Environment.getExternalStorageDirectory() + "/ViSensor/Obj");
 
-
         if(!topLevelDir.exists())
         {
-
             if(!topLevelDir.mkdir())
             {
                 Log.d(TAG, "Creating top level directory failed.");
@@ -108,7 +107,6 @@ public class BluetoothConnectionList extends AppCompatActivity
 
             if (!jsonDir.exists())
             {
-
                 if(!jsonDir.mkdir())
                 {
                     Log.d(TAG, "Creating json directory failed.");
@@ -117,7 +115,6 @@ public class BluetoothConnectionList extends AppCompatActivity
 
             if (!objDir.exists())
             {
-
                 if(!objDir.mkdir())
                 {
                     Log.d(TAG, "Creating obj directory failed.");
@@ -126,7 +123,6 @@ public class BluetoothConnectionList extends AppCompatActivity
         }
         else if(!jsonDir.exists())
         {
-
             if(!jsonDir.mkdir())
             {
                 Log.d(TAG, "Creating json directory failed.");
@@ -134,7 +130,6 @@ public class BluetoothConnectionList extends AppCompatActivity
 
             if(!objDir.exists())
             {
-
                 if(!objDir.mkdir())
                 {
                     Log.d(TAG, "Creating obj directory failed.");
@@ -143,13 +138,11 @@ public class BluetoothConnectionList extends AppCompatActivity
         }
         else if(!objDir.exists())
         {
-
             if(!objDir.mkdir())
             {
                 Log.d(TAG, "Creating obj directory failed.");
             }
         }
-
 
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled())
         {
@@ -160,15 +153,11 @@ public class BluetoothConnectionList extends AppCompatActivity
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-
         int permissionCheckLocation = ContextCompat.
                 checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);
 
-
-
         int permissionCheckWrite = ContextCompat.
                 checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-
 
         if(permissionCheckLocation != PackageManager.PERMISSION_GRANTED)
         {
@@ -201,12 +190,10 @@ public class BluetoothConnectionList extends AppCompatActivity
                             if(!bDevices.contains(device))
                             {
                                 bluetoothAddress.add(device.getAddress());
-
                                 bluetoothName.add(device.getName());
-
                                 bDevices.add(device);
 
-                                device.getBondState();
+                                Log.d(TAG, "Device List: " + bDevices);
 
                                 ((BaseAdapter)ListAdapter).notifyDataSetChanged();
                             }
@@ -257,14 +244,12 @@ public class BluetoothConnectionList extends AppCompatActivity
     {
         switch(item.getItemId())
         {
-
             case android.R.id.home :
-
                 finish();
+
                 return true;
 
             case R.id.refresh:
-
                 //This space is for the functionality of the bluetooth refresh menu button.
                 bluetoothName.clear();
                 bluetoothAddress.clear();
@@ -288,14 +273,12 @@ public class BluetoothConnectionList extends AppCompatActivity
                 return true;
 
             case R.id.vr_menu_start:
-
                 Intent vrIntent = new Intent(this, VRmenuMap.class);
                 BluetoothConnectionList.this.startActivity(vrIntent);
 
                 return true;
 
             default:
-
                 return super.onOptionsItemSelected(item);
         }
     }
@@ -304,7 +287,6 @@ public class BluetoothConnectionList extends AppCompatActivity
     @Override
     public void onDestroy()
     {
-
         super.onDestroy();
     }
 }
