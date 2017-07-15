@@ -193,26 +193,38 @@ class VRmenuAdapter extends ArrayAdapter<String>
 
     private String formatDate(String fn)
     {
-        String year = fn.substring(0,4);
-        String month = fn.substring(5,7);
-        String day = fn.substring(8,10);
-        String hour = fn.substring(11,13);
-        String minute = fn.substring(14,16);
-        String second = fn.substring(17,19);
+        try
+        {
+            String year = fn.substring(0, 4);
+            String month = fn.substring(5, 7);
+            String day = fn.substring(8, 10);
+            String hour = fn.substring(11, 13);
+            String minute = fn.substring(14, 16);
+            String second = fn.substring(17, 19);
 
-        return day+"."+month+"."+year;
+            return day + "." + month + "." + year;
+        }catch (Exception e)
+        {
+            return "No Datetime";
+        }
     }
 
     private String formatTime(String fn)
     {
-        String year = fn.substring(0,4);
-        String month = fn.substring(5,7);
-        String day = fn.substring(8,10);
-        String hour = fn.substring(11,13);
-        String minute = fn.substring(14,16);
-        String second = fn.substring(17,19);
+        try
+        {
+            String year = fn.substring(0, 4);
+            String month = fn.substring(5, 7);
+            String day = fn.substring(8, 10);
+            String hour = fn.substring(11, 13);
+            String minute = fn.substring(14, 16);
+            String second = fn.substring(17, 19);
 
-        return hour+":"+minute+":"+second;
+            return hour+":"+minute+":"+second;
+        }catch (Exception e)
+        {
+            return "";
+        }
     }
 
     private void showDelDialog()
