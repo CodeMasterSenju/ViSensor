@@ -64,7 +64,8 @@ class VRmenuAdapter extends ArrayAdapter<String>
     private static class VrViewHolder
     {
         private TextView sessionName;
-        private TextView sessionCount;
+        private TextView sessionDate;
+        private TextView sessionTime;
     }
 
 
@@ -81,7 +82,8 @@ class VRmenuAdapter extends ArrayAdapter<String>
             convertView = ListInflater.inflate(R.layout.vr_menu_list_pattern, parent, false);
 
             mVrViewHolder.sessionName = (TextView) convertView.findViewById(R.id.sessionName);
-            mVrViewHolder.sessionCount = (TextView) convertView.findViewById(R.id.sessionCount);
+            mVrViewHolder.sessionDate = (TextView) convertView.findViewById(R.id.sessionDate);
+            mVrViewHolder.sessionTime = (TextView) convertView.findViewById(R.id.sessionTime);
 
             convertView.setTag(mVrViewHolder);
         }
@@ -91,9 +93,11 @@ class VRmenuAdapter extends ArrayAdapter<String>
         }
 
 
-        String sessionNo = "Session " + (position+1);
+        String sessionD = formatDate(fileNames.get(position));
+        String sessionT = formatTime(fileNames.get(position));
 
-        mVrViewHolder.sessionCount.setText(sessionNo);
+        mVrViewHolder.sessionDate.setText(sessionD);
+        mVrViewHolder.sessionTime.setText("   " + sessionT);
         mVrViewHolder.sessionName.setText(fileNames.get(position));
 
         convertView.setOnClickListener(new View.OnClickListener()
@@ -187,6 +191,41 @@ class VRmenuAdapter extends ArrayAdapter<String>
         return convertView;
     }
 
+    private String formatDate(String fn)
+    {
+        try
+        {
+            String year = fn.substring(0, 4);
+            String month = fn.substring(5, 7);
+            String day = fn.substring(8, 10);
+            String hour = fn.substring(11, 13);
+            String minute = fn.substring(14, 16);
+            String second = fn.substring(17, 19);
+
+            return day + "." + month + "." + year;
+        }catch (Exception e)
+        {
+            return "No Datetime";
+        }
+    }
+
+    private String formatTime(String fn)
+    {
+        try
+        {
+            String year = fn.substring(0, 4);
+            String month = fn.substring(5, 7);
+            String day = fn.substring(8, 10);
+            String hour = fn.substring(11, 13);
+            String minute = fn.substring(14, 16);
+            String second = fn.substring(17, 19);
+
+            return hour+":"+minute+":"+second;
+        }catch (Exception e)
+        {
+            return "";
+        }
+    }
 
     private void showDelDialog()
     {

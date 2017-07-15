@@ -706,7 +706,8 @@ class ModelConstructor
     {
       
         double extraSpace = 2000;
-        double textureConstant = 10;
+        double extraSpaceNear = 10;
+        double textureConstant = 2;
         ArrayList<int[]> floorPlanes = new ArrayList<>();
 
         Vector3D avg = getAverage(vectors);
@@ -721,6 +722,7 @@ class ModelConstructor
                 ni.y = 0;
                 ni.normalize();
                 floorPoints.add(sur.add(ni.scale(extraSpace)));
+                floorPoints.add(sur.add(ni.scale(extraSpaceNear)));
                 floorPoints.add(sur);
             }
 
