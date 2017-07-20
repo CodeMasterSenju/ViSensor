@@ -37,7 +37,6 @@ import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.concurrent.SynchronousQueue;
 
 import static android.os.SystemClock.sleep;
 
@@ -46,149 +45,190 @@ import static android.os.SystemClock.sleep;
  * This is a list of available bluetooth devices.
  */
 
-class BluetoothConnectionListAdapter extends ArrayAdapter<String> {
+class BluetoothConnectionListAdapter extends ArrayAdapter<String>
+{
+    private static final String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
 
     private ArrayList<String> bluetoothAddress;
     private ArrayList<String> bluetoothName;
     private ArrayList<BluetoothDevice> bDevices;
+
     private Activity contextActivity;
+
     private Intent intent;
     private Intent mainIntent;
-    private int connected;
-    private Thread connectThread;
-    private ProgressDialog connectDialog;
-    private boolean timeout;
     private final Intent bluetoothServiceIntent;
+
+    private int connected;
+
+    private Thread connectThread;
+
+    private ProgressDialog connectDialog;
+
+    private boolean timeout;
+
     private final BluetoothConnectionListAdapter bclaReference = this;
 
-    private static final String TAG = BluetoothConnectionListAdapter.class.getSimpleName();
 
-    BluetoothConnectionListAdapter(Activity context, ArrayList<String> bluetoothAddress, ArrayList<String> bluetoothName, ArrayList<BluetoothDevice> bDevices){
+    BluetoothConnectionListAdapter(Activity context,
+                                   ArrayList<String> bluetoothAddress,
+                                   ArrayList<String> bluetoothName,
+                                   ArrayList<BluetoothDevice> bDevices)
+    {
         super(context, R.layout.activity_bluetooth_connection, bluetoothAddress);
+
         this.bluetoothAddress = bluetoothAddress;
         this.bluetoothName = bluetoothName;
         this.bDevices = bDevices;
         this.contextActivity = context;
-        connected = 0;
         this.intent = new Intent();
+
+        connected = 0;
+
         timeout = false;
+
         bluetoothServiceIntent = new Intent(context, BluetoothService.class);
 
-        BroadcastReceiver connectedReceive = new BroadcastReceiver(){
+        BroadcastReceiver connectedReceive = new BroadcastReceiver()
+        {
             @Override
-            public void onReceive(Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent)
+            {
                 connected = (int)intent.getExtras().get("connected");
-                Log.d(TAG, "RECEIVE : " + connected);
             }
         };
-        LocalBroadcastManager.getInstance(context).registerReceiver(connectedReceive, new IntentFilter("connectedFilter"));
+
+        LocalBroadcastManager.getInstance(context).
+                registerReceiver(connectedReceive, new IntentFilter("connectedFilter"));
     }
+
 
     private int getConnected()
     {
         return connected;
     }
 
-    private static class ViewHolder {
+
+    private static class ViewHolder
+    {
         private TextView bluetoothConnectionName;
         private TextView bluetoothConnectionStatus;
     }
 
-    private static class ConnectionHandlerClass extends Handler {
+
+    private static class ConnectionHandlerClass extends Handler
+    {
         private final WeakReference<BluetoothConnectionListAdapter> mTarget;
 
-        ConnectionHandlerClass(BluetoothConnectionListAdapter context) {
+        ConnectionHandlerClass(BluetoothConnectionListAdapter context)
+        {
             mTarget = new WeakReference<>(context);
         }
 
         @Override
-        public void handleMessage (Message msg) {
+        public void handleMessage (Message msg)
+        {
             super.handleMessage(msg);
+
             BluetoothConnectionListAdapter target = mTarget.get();
+
             target.connectDialog.dismiss();
 
-            if (target.timeout) {
-                target.contextActivity.stopService(target.bluetoothServiceIntent); //The BluetoothService needs to be stopped if connecting timed out.
-                target.timeout = false; //Reset timeout variable to try connecting again.
-            } else {
+            if (target.timeout)
+            {
+                //The BluetoothService needs to be stopped if connecting timed out.
+                target.contextActivity.stopService(target.bluetoothServiceIntent);
+
+                //Reset timeout variable to try connecting again.
+                target.timeout = false;
+            }
+            else
+            {
                 target.mainIntent = new Intent(target.contextActivity, Main.class);
                 target.contextActivity.startActivity(target.mainIntent);
                 target.connectThread.interrupt();
                 target.connected = 0;
+
                 Log.d(TAG, "THREAD INTERRUPTED " + target.connectThread.getState());
+
                 target.contextActivity.finish();
             }
         }
     }
 
+
     @Override @NonNull
-    public View getView(final int position, View convertView, @NonNull ViewGroup parent) {
+    public View getView(final int position, View convertView, @NonNull ViewGroup parent)
+    {
         ViewHolder mViewHolder;
 
-        if (convertView == null) {
-
+        if (convertView == null)
+        {
             mViewHolder = new ViewHolder();
+
             LayoutInflater ListInflater = LayoutInflater.from(getContext());
+
             convertView = ListInflater.inflate(R.layout.bluetooth_list_pattern, parent, false);
 
-            mViewHolder.bluetoothConnectionName = (TextView) convertView.findViewById(R.id.bluetooth_connection_name);
-            mViewHolder.bluetoothConnectionStatus = (TextView) convertView.findViewById(R.id.bluetooth_connection_status);
+            mViewHolder.bluetoothConnectionName = (TextView) convertView.
+                    findViewById(R.id.bluetooth_connection_name);
 
+            mViewHolder.bluetoothConnectionStatus = (TextView) convertView.
+                    findViewById(R.id.bluetooth_connection_status);
 
             convertView.setTag(mViewHolder);
 
-            //final ConnectionHandlerClass connectHandler = new ConnectionHandlerClass(this);
-
-            convertView.setOnClickListener(new View.OnClickListener() {
+            convertView.setOnClickListener(new View.OnClickListener()
+            {
                 @Override
-                public void onClick(View v) {
+                public void onClick(View v)
+                {
                     //What happens if you press on the list items at the bluetooth activity.
                     Animation animation = new AlphaAnimation(0.3f, 1.0f);
+
                     animation.setDuration(1000);
+
                     v.startAnimation(animation);
 
                     intent = new Intent(contextActivity, BluetoothService.class);
                     intent.putExtra("device", bDevices.get(position));
                     intent.putExtra("deviceList", bDevices);
+
                     contextActivity.startService(intent);
 
                     final ProgressDialog connectingDialog = new ProgressDialog(contextActivity);
+
                     connectDialog = connectingDialog;
+
                     connectingDialog.setMessage("Connecting...");
                     connectingDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                     connectingDialog.setCancelable(false);
                     connectingDialog.show();
 
-                    final ConnectionHandlerClass connectHandler = new ConnectionHandlerClass(bclaReference);
+                    final ConnectionHandlerClass connectHandler =
+                            new ConnectionHandlerClass(bclaReference);
 
-//                    final Handler connectHandler = new Handler() {
-//                        @Override
-//                        public void handleMessage(Message msg) {
-//                            Log.d(TAG, "MESSAGE RECEIVED");
-//                            connectingDialog.dismiss();
-//                            mainIntent = new Intent(contextActivity, Main.class);
-//                            contextActivity.startActivity(mainIntent);
-//                            connectThread.interrupt();
-//                            connected = 0;
-//                            Log.d(TAG, "THREAD INTERRUPTED " + connectThread.getState());
-//                            contextActivity.finish();
-//                        }
-//                    };
-
-                    connectThread = new Thread(new Runnable() {
+                    connectThread = new Thread(new Runnable()
+                    {
                         @Override
-                        public void run() {
+                        public void run()
+                        {
                             int stop = 0;
                             int counter = 0;
 
-                            while (stop == 0 && counter < 5) {//Timeout after 10 seconds.
+                            //Timeout after 10 seconds.
+                            while (stop == 0 && counter < 5)
+                            {
                                 stop = getConnected();
                                 counter++;
                                 sleep(2000);
                             }
 
-                            if (stop == 0 && counter == 4)//Timeout occurred after 10s of waiting and stop is still 0.
+                            //Timeout occurred after 10s of waiting and stop is still 0.
+                            if (stop == 0 && counter == 4)
+                            {
                                 timeout = true;
+                            }
 
                             connectHandler.sendEmptyMessage(0);
                         }
@@ -197,7 +237,9 @@ class BluetoothConnectionListAdapter extends ArrayAdapter<String> {
                     connectThread.start();
                 }
             });
-        } else {
+        }
+        else
+        {
             mViewHolder = (ViewHolder) convertView.getTag();
         }
 

@@ -32,30 +32,35 @@ import android.support.v4.content.LocalBroadcastManager;
  * This Service gets the data from the barometer.
  */
 
-public class BaroService extends Service implements SensorEventListener {
+public class BaroService extends Service implements SensorEventListener
+{
 
     //air pressure
     private double baro;
     //filter
     private SimpleKalmanFilter filter;
-
     //formalities
     private SensorManager baroManager;
     private Sensor baroSensor;
 
-//onDestroy=========================================================================================
+
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         baroManager.unregisterListener(this, baroSensor);
+
         super.onDestroy();
     }
-//onDestroy=End=====================================================================================
+
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {/*nothing*/}
 
-    public void  onSensorChanged(SensorEvent event) {
-        if (event.values.length > 0) {
+
+    public void onSensorChanged(SensorEvent event)
+    {
+        if (event.values.length > 0)
+        {
 
             baro = filter.output(event.values[0]);
 
@@ -67,17 +72,22 @@ public class BaroService extends Service implements SensorEventListener {
     }
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         return null;
     }
 
-    public void onCreate() {
+    public void onCreate()
+    {
         super.onCreate();
-        baroManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        baroSensor = baroManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
-        baroManager.registerListener(this, baroSensor, SensorManager.SENSOR_DELAY_FASTEST);
-        filter = new SimpleKalmanFilter(0.013, 0.0000005);
 
+        baroManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+        baroSensor = baroManager.getDefaultSensor(Sensor.TYPE_PRESSURE);
+
+        baroManager.registerListener(this, baroSensor, SensorManager.SENSOR_DELAY_FASTEST);
+
+        filter = new SimpleKalmanFilter(0.013, 0.0000005);
     }
 }
 

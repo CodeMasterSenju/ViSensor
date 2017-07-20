@@ -40,101 +40,131 @@ public class PositionService extends Service {
     private double[] gps = {0,0,0}; // longitude, latitude, height
     private double[] origin = {0,0,0}; // store the point of origin
     private double[] gpsDistance = {0,0,0}; //current position in cartesian coordinates in m
-    private boolean gpsInit = false; //Has origin been initialized?
 
     private double startPressure = 0; //store the pressure when beginning measurement
     private double pressure = 0; //current atmospheric pressure
     private double heightDifference = 0;
 
+    private boolean gpsInit = false; //Has origin been initialized?
     private boolean baroInit = false; //Has startPressure been initialized?
-
-
 
     //formalities
     private Intent gpsIntent, baroIntent;
 
-    private BroadcastReceiver gpsReceive = new BroadcastReceiver() {
+
+    private BroadcastReceiver gpsReceive = new BroadcastReceiver()
+    {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent)
+        {
             gps = (double[])intent.getExtras().get("gpsRawData");
 
-            if (gps == null) {
+            if (gps == null)
+            {
                 Log.d(TAG, "Error while receiving gpsRawData.");
+
                 return;
             }
 
-            if (!gpsInit) {
+            if (!gpsInit)
+            {
                 origin[0] = gps[0];
                 origin[1] = gps[1];
                 origin[2] = gps[2];
+
                 gpsInit = true;
             }
 
             //Calculating cartesian coordinates.
             final double mPerLatitude = 111133; //Distance of one degree of latitude.
-            gpsDistance[0] = (gps[0] - origin[0]) * mPerLatitude * Math.cos(gps[1]*2*Math.PI / 360);
+
+            gpsDistance[0] = (gps[0] - origin[0]) * mPerLatitude *
+                    Math.cos(gps[1] * 2 * Math.PI / 360);
+
             gpsDistance[1] = (gps[1] - origin[1]) * mPerLatitude;
             gpsDistance[2] = gps[2] - origin[2];
 
             Intent gpsDistIntent = new Intent();
+
             gpsDistIntent.putExtra("gpsDistance", gpsDistance);
             gpsDistIntent.setAction("gpsDistFilter");
+
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(gpsDistIntent);
         }
     };
 
-    private BroadcastReceiver baroReceive = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
 
+    private BroadcastReceiver baroReceive = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
             pressure = (double)intent.getExtras().get("baroRawData");
 
-            if (!baroInit) {
+            if (!baroInit)
+            {
                 startPressure = pressure;
                 baroInit = true;
             }
 
             final double mPerPa = 0.11; //11cm height difference per 1Pa.
+
             heightDifference = (startPressure - pressure) * 100 * mPerPa;
 
-
             Intent hDiffIntent = new Intent();
+
             hDiffIntent.putExtra("hDiff", heightDifference);
             hDiffIntent.setAction("hDiffFilter");
+
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(hDiffIntent);
         }
     };
 
 
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(Intent intent)
+    {
         return null;
     }
 
     @Override
-    public void onCreate() {
+    public void onCreate()
+    {
         super.onCreate();
+
         Log.d(TAG, "PositionService was created.");
-        LocalBroadcastManager.getInstance(this).registerReceiver(gpsReceive, new IntentFilter("gpsFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(baroReceive, new IntentFilter("baroFilter"));
-        LocalBroadcastManager.getInstance(this).registerReceiver(resetOrigin, new IntentFilter("resetFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(gpsReceive,
+                new IntentFilter("gpsFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(baroReceive,
+                new IntentFilter("baroFilter"));
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(resetOrigin,
+                new IntentFilter("resetFilter"));
+
         gpsIntent = new Intent(this, GpsService.class);
+
         baroIntent = new Intent(this, BaroService.class);
+
         startService(gpsIntent);
         startService(baroIntent);
     }
 
-    public void onDestroy() {
+    public void onDestroy()
+    {
         super.onDestroy();
+
         stopService(gpsIntent);
         stopService(baroIntent);
     }
 
     //resets origin
-    private BroadcastReceiver resetOrigin = new BroadcastReceiver() {
-
+    private BroadcastReceiver resetOrigin = new BroadcastReceiver()
+    {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(Context context, Intent intent)
+        {
             origin[0] = gps[0];
             origin[1] = gps[1];
             origin[2] = gps[2];
@@ -146,13 +176,17 @@ public class PositionService extends Service {
             startPressure = pressure;
 
             Intent gpsDistIntent = new Intent();
+
             gpsDistIntent.putExtra("gpsDistance", gpsDistance);
             gpsDistIntent.setAction("gpsDistFilter");
+
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(gpsDistIntent);
 
             Intent hDiffIntent = new Intent();
+
             hDiffIntent.putExtra("hDiff", heightDifference);
             hDiffIntent.setAction("hDiffFilter");
+
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(hDiffIntent);
         }
     };

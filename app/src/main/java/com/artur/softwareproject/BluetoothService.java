@@ -55,7 +55,9 @@ public class BluetoothService extends Service{
     private final UUID UUID_OPT_CONF = fromString("f000aa72-0451-4000-b000-000000000000"); // 0: disable, 1: enable
 
     private BluetoothGatt mBluetoothGatt;
+
     private Intent serviceIntent;
+
     private int init;
 
     private BluetoothGattCharacteristic tempData;
@@ -67,21 +69,29 @@ public class BluetoothService extends Service{
     private BluetoothGattCharacteristic optData;
     private BluetoothGattCharacteristic optConf;
 
-    public BluetoothService(){
+    public BluetoothService()
+    {
         init = 0;
     }
 
+
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    public int onStartCommand(Intent intent, int flags, int startId)
+    {
         Log.d(TAG,"Bluetoothservice was started.");
+
         this.serviceIntent = intent;
 
         if(intent != null)
         {
             BluetoothDevice bDevice;
+
             bDevice = (BluetoothDevice)intent.getExtras().get("device");
+
             if (bDevice != null)
+            {
                 mBluetoothGatt = bDevice.connectGatt(this, false, mGattCallback);
+            }
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -89,40 +99,61 @@ public class BluetoothService extends Service{
 
     @Override
     public IBinder onBind(Intent intent) {
+
         return null;
     }
 
+
     @Override
     public void onDestroy() {
+
         Log.d(TAG,"Bluetoothservice was destroyed.");
+
         mBluetoothGatt.disconnect();
+
         stopService(serviceIntent);
     }
 
+
     private final BluetoothGattCallback mGattCallback =
             new BluetoothGattCallback() {
+
                 @Override
                 public void onConnectionStateChange(BluetoothGatt gatt, int status,
-                                                    int newState) {
+                                                    int newState)
+                {
 
                     Intent mainIntent = new Intent();
-                    switch (newState) {
+                    switch (newState)
+                    {
                         case BluetoothProfile.STATE_CONNECTED:
+
                             mainIntent.putExtra("connected", 1);
                             mainIntent.setAction("connectedFilter");
-                            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+
+                            LocalBroadcastManager.getInstance(getApplicationContext()).
+                                    sendBroadcast(mainIntent);
+
                             mBluetoothGatt.discoverServices();
+
                             break;
 
                         case BluetoothProfile.STATE_DISCONNECTED:
+
                             mainIntent.putExtra("disconnect", 1);
                             mainIntent.setAction("disconnectFilter");
-                            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+
+                            LocalBroadcastManager.getInstance(getApplicationContext()).
+                                    sendBroadcast(mainIntent);
+
                             break;
+
                         default:
+
                             break;
                     }
                 }
+
 
                 @Override
                 public void onServicesDiscovered(BluetoothGatt gatt, int status) {
@@ -131,7 +162,8 @@ public class BluetoothService extends Service{
                     {
                         for(BluetoothGattService service: gatt.getServices())
                         {
-                            for(BluetoothGattCharacteristic characteristic : service.getCharacteristics())
+                            for(BluetoothGattCharacteristic characteristic : service.
+                                    getCharacteristics())
                             {
                                 if(characteristic.getUuid().equals(UUID_IRT_CONF))
                                 {
@@ -165,8 +197,13 @@ public class BluetoothService extends Service{
                     }
                 }
 
+
                 @Override
-                public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                public void onCharacteristicWrite(BluetoothGatt gatt,
+                                                  BluetoothGattCharacteristic characteristic,
+                                                  int status)
+                {
+
                     if(characteristic.getUuid().equals(UUID_IRT_CONF))
                     {
                         humConf.setValue(new byte[]{0x01});
@@ -186,70 +223,100 @@ public class BluetoothService extends Service{
                     }
                 }
 
+
                 @Override
-                public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                public void onCharacteristicChanged(BluetoothGatt gatt,
+                                                    BluetoothGattCharacteristic characteristic)
+                {
 
                     if(characteristic.getUuid().equals(UUID_IRT_DATA))
                     {
                         ConvertData convert = new ConvertData();
+
                         byte[] tempValue = characteristic.getValue();
                         double tempUpdateValue = convert.extractAmbientTemperature(tempValue);
 
                         Intent mainIntent = new Intent();
+
                         mainIntent.putExtra("ambientTemperature", tempUpdateValue);
                         mainIntent.setAction("temperatureFilter");
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+
+                        LocalBroadcastManager.getInstance(getApplicationContext()).
+                                sendBroadcast(mainIntent);
                     }
                     else if(characteristic.getUuid().equals(UUID_HUM_DATA))
                     {
                         ConvertData convert = new ConvertData();
+
                         byte[] humValue = characteristic.getValue();
                         double humUpdateValue = convert.extractHumidity(humValue);
 
                         Intent mainIntent = new Intent();
+
                         mainIntent.putExtra("humidity", humUpdateValue);
                         mainIntent.setAction("humidityFilter");
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+
+                        LocalBroadcastManager.getInstance(getApplicationContext()).
+                                sendBroadcast(mainIntent);
                     }
                     else if(characteristic.getUuid().equals(UUID_OPT_DATA))
                     {
                         ConvertData convert = new ConvertData();
+
                         byte[] optValue = characteristic.getValue();
                         double optUpdateValue = convert.extractLightIntensity(optValue);
 
                         Intent mainIntent = new Intent();
+
                         mainIntent.putExtra("light", optUpdateValue);
                         mainIntent.setAction("lightFilter");
-                        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(mainIntent);
+
+                        LocalBroadcastManager.getInstance(getApplicationContext()).
+                                sendBroadcast(mainIntent);
                     }
                 }
 
+
                 @Override
-                public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+                public void onCharacteristicRead(BluetoothGatt gatt,
+                                                 BluetoothGattCharacteristic characteristic,
+                                                 int status)
+                {
 
                     if(characteristic.getUuid().equals(UUID_IRT_DATA))
                     {
                         BluetoothGattDescriptor descriptor = characteristic.getDescriptor(UUID_NOT);
+
                         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+
                         mBluetoothGatt.writeDescriptor(descriptor);
                     }
                 }
 
-                @Override
-                public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
 
+                @Override
+                public void onDescriptorWrite(BluetoothGatt gatt,
+                                              BluetoothGattDescriptor descriptor,
+                                              int status)
+                {
                     if(init == 0)
                     {
                         BluetoothGattDescriptor humDescriptor = humData.getDescriptor(UUID_NOT);
+
                         humDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+
                         mBluetoothGatt.writeDescriptor(humDescriptor);
+
                         init = 1;
                     }
                     else if(init == 1)
                     {
                         BluetoothGattDescriptor optDescriptor = optData.getDescriptor(UUID_NOT);
+
                         optDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+
                         mBluetoothGatt.writeDescriptor(optDescriptor);
+
                         init = 2;
                     }
                 }
