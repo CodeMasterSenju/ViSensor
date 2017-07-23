@@ -17,11 +17,11 @@
 //
 
 var CONTROLLER_THRESHOLD = 0.3; //up to this value movement of the joysticks will be ignored
-var ROTATION_SPEED = 2;
-var MOVEMENT_SPEED = 0.2;
+var ROTATION_SPEED = 2; // the speed the camera is rotating with
+var MOVEMENT_SPEED = 0.2; // the speed the camera is moving with
 
-var DISPLAYABLE_SENSORS = ["temperature", "illuminance", "humidity"];
-var DISPLAYED_SENSOR = "illuminance";
+var DISPLAYABLE_SENSORS = ["temperature", "illuminance", "humidity"]; // list fo all displayable sensors
+var DISPLAYED_SENSOR = "illuminance"; // sensor that will be displayed
 
 var MINIMAL_DISTANCE = 1.5; // minimal distance between measuring points
 var MAXIMAL_SIZE = 1.0; // minimal size for spheres
@@ -29,15 +29,19 @@ var MINIMAL_SIZE = 0.1; // maximal size for spheres
 
 var SENSOR_CHANGED = true; // true if the sensor is changed in the menu
 
+var DISPLAY_DISTANCE = 10; // sensor-values in this radius are displayed when hovering over datapoint
+
 var sensorData = []; // parsed data from json-file
 var parameters = {}; // variables declared via http-get
 
 var haveEvents = 'ongamepadconnected' in window;
 var controllers = {}; // list of controllers
 var menu_open = false; // true if menu has been opened
-var menu_state = "scheme";
-var color_scheme = 2;
-var sensor = 1;
+var menu_state = "scheme"; // can change between scheme and color
+var color_scheme = 2; // the color sheme that is used
+var sensor = 1; // sensor that is displayed (see `DISPLAYED_SENSOR`)
+
+var hoveredDatapointPosition; //position of datapoint the cursor is currently looking at
 
 // button states are used because the controller sends continous signals on button press
 var button_state = {
@@ -57,6 +61,7 @@ document.addEventListener('keydown', (event) => {
 		} else {
 			menu_open = false;
 		}
+	// navigate in menu
 	} else if (keyName === 'ArrowRight' && menu_open) {
 		if (menu_state == "scheme") {
 			if (color_scheme < 2)
@@ -83,6 +88,7 @@ document.addEventListener('keydown', (event) => {
 		menu_state = "scheme";
 	}
 
+	// change sensor according to selected sensor in menu
 	switch (sensor) {
 		case 0:
 			DISPLAYED_SENSOR = 'temperature';
@@ -136,7 +142,7 @@ if (!haveEvents) {
 // executed on first load of page
 $(document).ready(function () {
 	var i;
-	var getItems = window.location.search.substr(1).split(/\?|\&/);
+	var getItems = window.location.search.substr(1).split(/\?|\&/); // split GET-variables off
 
 	for (i in getItems) {
 		parameters[getItems[i].split("=")[0]] = getItems[i].split("=")[1];
@@ -166,8 +172,9 @@ $(document).ready(function () {
 	});
 });
 
+// fill array with datapoints
 function setSensorData(callback) {
-	var m_Data =  parameters["file"] + ".json"; // JSON-data-file
+	var m_Data = parameters["file"] + ".json"; // JSON-data-file
 
 	// save data for requested sensor in `sensorData`-variable
 	$.getJSON(m_Data, function (result) {
@@ -219,13 +226,17 @@ function display() {
 		}
 	}
 
-	var max = getMaxValue(dataArray);
-	var min = getMinValue(dataArray);
+	var max = getMaxValue(dataArray); // maximal value for displayed sensor
+	var min = getMinValue(dataArray); // minimal value for displayed sensor
 
 	// scale input data for better representation
-	var hscale = d3.scaleLog()
-		.domain([min, Math.round(max)])
-		.range([MINIMAL_SIZE, MAXIMAL_SIZE]);
+	var hscale = (DISPLAYED_SENSOR == "illuminance") ?
+		d3.scaleLog()
+			.domain([min, Math.round(max)])
+			.range([MINIMAL_SIZE, MAXIMAL_SIZE]) :
+		d3.scaleLinear()
+			.domain([min, Math.round(max)])
+			.range([MINIMAL_SIZE, MAXIMAL_SIZE]);
 
 	// create spheres
 	var entities = scene.selectAll('a-entity.datapoint').data(dataArray);
@@ -253,13 +264,24 @@ function display() {
 	// text with value for datapoint
 	entity.append("a-text").attr("class", "datapoint")
 		.attr("position", function (d, i) {
-			return {"x": 0, y: d["coordinate"].y + (hscale(d[DISPLAYED_SENSOR])) + 0.5, z: 0};
+			return {"x": 0, "y": (hscale(d[DISPLAYED_SENSOR])) + 0.5, "z": 0};
 		})
 		.attr("value", function (d, i) {
 			return Math.round(d[DISPLAYED_SENSOR]* 100) / 100;
 		})
 		.attr("align", "center")
 		.attr("visible", false);
+
+	// ° sign cannot be displayed so a plane with texture will be rendered instead
+	entity.select('a-text').append("a-plane").attr("class", "datapoint")
+		.attr("position", function (d, i) {
+			return {"x": 0.45, "y": 0, "z": 0};
+		})
+		.attr("scale", "0.16 0.16 0.16")
+		.attr("color", "white")
+		.attr("transparent", true)
+		.attr("visible", false)
+		.attr("src", "centigrades_texture.png");
 
 	// update-loop
 	function render() {
@@ -268,16 +290,21 @@ function display() {
 		var scene = d3.select("a-scene"); // select scene for displaying data
 		var entities = scene.selectAll('a-entity.datapoint').data(dataArray);
 
+		// values of datapoints will be displayed if mouse hovers over them
 		entities.on('mouseenter', function () {
 			d3.select(this)
 				.select('a-text')
-				.attr('visible', true)
+				.attr('visible', true);
+
+			hoveredDatapointPosition = d3.select(this).attr('position');
 		})
 
-			entities.on('mouseleave', function () {
-			d3.select(this)
-				.select('a-text')
-				.attr('visible', false)
+		entities.on('mouseleave', function () {
+		d3.select(this)
+			.select('a-text')
+			.attr('visible', false);
+
+		hoveredDatapointPosition = null;
 		})
 
 		switch (DISPLAYED_SENSOR) {
@@ -295,6 +322,7 @@ function display() {
 		}
 
 
+		// change menu button states according to selected sensor
 		if (sensor == 0) {
 			DISPLAYED_SENSOR = "temperature";
 			d3.select('#temperature').attr("color", "blue");
@@ -312,7 +340,7 @@ function display() {
 			d3.select('#humidity').attr("color", "blue");
 		}
 
-
+		// change menu state
 		if (menu_state == "sensor") {
 			d3.select('#sensor').attr("color", "black");
 			d3.select('#scheme').attr("color", "grey");
@@ -321,13 +349,19 @@ function display() {
 			d3.select('#sensor').attr("color", "grey");
 		}
 
-		var max = getMaxValue(dataArray);
-		var min = getMinValue(dataArray);
+		var max = getMaxValue(dataArray); // maximal value of current sensor
+		var min = getMinValue(dataArray); // minimal value of current sensor
 
-		var hscale = d3.scaleLog()
-			.domain([min, Math.round(max)])
+		// scale input data for better representation
+		var hscale = (DISPLAYED_SENSOR == "illuminance") ?
+			d3.scaleLog()
+				.domain([min, Math.round(max)])
+				.range([MINIMAL_SIZE, MAXIMAL_SIZE]) :
+			d3.scaleLinear()
+				.domain([min, Math.round(max)])
 			.range([MINIMAL_SIZE, MAXIMAL_SIZE]);
 
+		// change color of spheres
 		entities.select('a-sphere')
 		.attr("color", function (d, i) {
 			if (color_scheme == 0) {
@@ -335,21 +369,29 @@ function display() {
 				d3.select('#black_white').attr("color", "blue");
 				d3.select('#blue_white').attr("color", "red");
 				d3.select('#infrared').attr("color", "red");
+
+				d3.select('#color_theme_img').attr('src', 'bw.png');
 			} else if (color_scheme == 1) {
 				var arr = whiteBlue(hscale(d[DISPLAYED_SENSOR]), hscale(max), hscale(min));
 				d3.select('#black_white').attr("color", "red");
 				d3.select('#blue_white').attr("color", "blue");
 				d3.select('#infrared').attr("color", "red");
+
+				d3.select('#color_theme_img').attr('src', 'wb.png');
 			} else {
 				var arr = infraRed(hscale(d[DISPLAYED_SENSOR]), hscale(max), hscale(min));
 				d3.select('#black_white').attr("color", "red");
 				d3.select('#blue_white').attr("color", "red");
 				d3.select('#infrared').attr("color", "blue");
+
+				d3.select('#color_theme_img').attr('src', 'infrared.png');
 			}
 
 			return "rgb(" + arr[0] + "," + arr[1] + "," + arr[2] + ")";
 		});
 
+		// runs only if sensor has been changed in menu
+		// spehers and texts must be adapted to new sensor-values
 		if (SENSOR_CHANGED) {
 			entities.select('a-sphere')
 				.attr("radius", function (d, i) {
@@ -361,14 +403,54 @@ function display() {
 
 			entities.select('a-text')
 				.attr("position", function (d, i) {
-					return {x: 0, y: d["coordinate"].y + (hscale(d[DISPLAYED_SENSOR])) + 0.5, z: 0};
+					return {x: 0, y: (hscale(d[DISPLAYED_SENSOR])) + 0.5, z: 0};
 				})
 				.attr("value", function (d, i) {
-					return Math.round(d[DISPLAYED_SENSOR]* 100) / 100;
+					var e = null;
+
+					switch (DISPLAYED_SENSOR) {
+						case "temperature":
+							e = "";
+							entity.select('a-plane').attr("visible", true);
+							d3.selectAll('.degSign').attr("visible", true);
+							break;
+						case "humidity":
+							e = "%";
+							entity.select('a-plane').attr("visible", false);
+							d3.selectAll('.degSign').attr("visible", false);
+							break;
+						case "illuminance":
+							e = "lx";
+							entity.select('a-plane').attr("visible", false);
+							d3.selectAll('.degSign').attr("visible", false);
+							break;
+						default:
+							break;
+					}
+
+					// set min, max values in menu
+					d3.select('#min_value').attr('value',  Math.round(min * 100) / 100 + " " + e);
+					d3.select('#max_value').attr('value', Math.round(max * 100) / 100 + " " + e);
+
+					return Math.round(d[DISPLAYED_SENSOR]* 100) / 100 + " " + e;
 				});
 
 			SENSOR_CHANGED = false;
 		}
+
+		// display data-values only if selected sphere is close
+		entities.select('a-text')
+				.attr("visible", function (d, i) {
+					if (hoveredDatapointPosition == null)
+						return false;
+
+					var distance = calcDistance(hoveredDatapointPosition, d3.select(this.parentNode).attr('position'));
+
+					if (distance <= DISPLAY_DISTANCE)
+						return true;
+
+					return false;
+				});
 
 		if (!haveEvents)
 			scangamepads(); // check for gamepads
@@ -407,7 +489,7 @@ function display() {
 					return {x: v_angle, y: h_angle, z: 0};
 				});
 
-		// TODO: handle gamepad events for menu
+		// handle gamepad events for menu
 		if (menu_open)
 			d3.select('#menu').attr("visible", true);
 		else
@@ -538,6 +620,7 @@ function display() {
 	render();
 }
 
+// black-white color mapping
 function blackWhite(value, max, min) {
 	var bw;
 	if (value <= min) {
@@ -552,13 +635,14 @@ function blackWhite(value, max, min) {
 	return ret;
 }
 
+// white-blue color mapping
 function whiteBlue(value, max, min) {
 	var nb;
 
 	if (value <= min) {
 		nb = 1;
 	} else if (value >= max) {
-		bw = 0;
+		nb = 0;
 	} else {
 		nb = 1 - (value - min) / (max - min);
 	}
@@ -567,6 +651,7 @@ function whiteBlue(value, max, min) {
 	return ret;
 }
 
+// infrared color mapping
 function infraRed(value, max, min) {
 	var x1, x2, x3, x4, x5, x6;
 	var offset = (max - min) / 7;
@@ -624,6 +709,7 @@ function infraRed(value, max, min) {
 	return ret;
 }
 
+// get maximal value for current sensor
 function getMaxValue(dataArray) {
 	var max = dataArray[0][DISPLAYED_SENSOR];
 	for (var i = 1; i < dataArray.length; i++) {
@@ -632,10 +718,16 @@ function getMaxValue(dataArray) {
 	return max;
 }
 
+// get minimal value for current sensor
 function getMinValue(dataArray) {
 	var min = dataArray[0][DISPLAYED_SENSOR];
 	for (var i = 1; i < dataArray.length; i++) {
 		min = (dataArray[i][DISPLAYED_SENSOR] < min) ? dataArray[i][DISPLAYED_SENSOR] : min;
 	}
 	return min;
+}
+
+// calculate distance between two points
+function calcDistance(pos1, pos2) {
+	return Math.sqrt(Math.pow(pos2.x - pos1.x, 2) + Math.pow(pos2.y - pos1.y, 2) + Math.pow(pos2.z - pos1.z, 2));
 }
