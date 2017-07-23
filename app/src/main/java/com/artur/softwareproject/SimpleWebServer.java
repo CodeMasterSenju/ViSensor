@@ -1,4 +1,4 @@
-// Copyright (C) 2017 Jean Büsche
+// Copyright (C) 2017 Artur Baltabayev, Jean Büsche, Martin Kern, Gabriel Scheibler
 // 
 // This file is part of ViSensor.
 // 
@@ -152,7 +152,7 @@ public class SimpleWebServer extends Service implements Runnable
      * Respond to a request from a client.
      *
      * @param socket The client socket.
-     * @throws IOException "please put here a description, Jean"
+     * @throws IOException reading HTTP headers failed
      */
     private void handle(Socket socket) throws IOException
     {
@@ -243,7 +243,7 @@ public class SimpleWebServer extends Service implements Runnable
      *
      * @param fileName The name of the file.
      * @return The content of the file.
-     * @throws IOException "please put here a description, too, Jean"
+     * @throws IOException file not found
      */
     private byte[] loadContent(String fileName) throws IOException {
         InputStream input = null;
