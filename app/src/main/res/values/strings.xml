@@ -5,4 +5,10 @@
     <string name="cancel">Cancel</string>
     <string name="del">Delete</string>
     <string name="title_activity_vrmenu_map">Map</string>
+    <string name="list_all">List All</string>
+    <string name="show_data">Show Data</string>
+    <string name="start_recording">Start Recording</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="refresh">Refresh</string>
+    <string name="stop_recording">Stop Recording</string>
 </resources>

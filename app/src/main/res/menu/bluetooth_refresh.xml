@@ -8,7 +8,7 @@
     <item
         android:id="@+id/vr_menu_start"
         android:orderInCategory="0"
-        android:title="Menu"
+        android:title="@string/show_data"
         app:showAsAction="always"
         android:icon="@drawable/ic_visibility">
     </item>
@@ -16,7 +16,7 @@
     <item
         android:id="@+id/refresh"
         android:orderInCategory="100"
-        android:title="Menu"
+        android:title="@string/refresh"
         app:showAsAction="always"
         android:icon="@drawable/ic_action_refresh">
     </item>

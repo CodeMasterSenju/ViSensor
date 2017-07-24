@@ -7,15 +7,15 @@
 
     <item
         android:id="@+id/disconnect"
+        android:icon="@drawable/ic_action_cancel"
         android:orderInCategory="2"
-        android:title="Disconnect"
-        app:showAsAction="always"
-        android:icon="@drawable/ic_action_cancel"/>
+        android:title="@string/disconnect"
+        app:showAsAction="always" />
 
     <item
         android:id="@+id/record_data"
         android:orderInCategory="1"
-        android:title="Menu"
+        android:title="@string/start_recording"
         app:showAsAction="always"
         android:icon="@drawable/ic_action_save">
     </item>
@@ -23,7 +23,7 @@
     <item
         android:id="@+id/vr_menu"
         android:orderInCategory="0"
-        android:title="Menu"
+        android:title="@string/show_data"
         app:showAsAction="always"
         android:icon="@drawable/ic_visibility">
     </item>

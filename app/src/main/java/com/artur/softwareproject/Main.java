@@ -330,6 +330,7 @@ public class Main extends AppCompatActivity {
                     LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(resetIntent);
 
                     item.setIcon(R.drawable.ic_action_stop);
+                    item.setTitle(R.string.stop_recording);
 
                     Toast.makeText(getApplicationContext(), "Start recording data", Toast.LENGTH_LONG).show();
 
@@ -442,6 +443,7 @@ public class Main extends AppCompatActivity {
                 MenuItem item = mainMenu.findItem(R.id.record_data);
 
                 item.setIcon(R.drawable.ic_action_save);
+                item.setTitle(R.string.start_recording);
 
                 Animation a = AnimationUtils.loadAnimation(context, R.anim.textupslide);
                 TextView tv = (TextView) findViewById(R.id.recordClock);
