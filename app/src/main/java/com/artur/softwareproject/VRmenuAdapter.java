@@ -35,9 +35,6 @@ import android.widget.Toast;
 import java.io.File;
 import java.util.ArrayList;
 
-import static android.os.SystemClock.sleep;
-
-
 class VRmenuAdapter extends ArrayAdapter<String>
 {
     private static final String TAG = VRmenuAdapter.class.getSimpleName();
@@ -150,8 +147,6 @@ class VRmenuAdapter extends ArrayAdapter<String>
                                 Toast.LENGTH_LONG).show();
 
                         Log.d(TAG, "OBJ file was not found");
-
-                        sleep(1000);//Some time to read the message.
                     }
 
                     Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
