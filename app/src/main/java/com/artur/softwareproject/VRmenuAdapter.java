@@ -1,4 +1,4 @@
-/* Copyright 2017 Artur Baltabayev, Jean-Josef Büschel, Martin Kern, Gabriel Scheibler
+/* Copyright 2017 Artur Baltabayev, Jean Büsche, Martin Kern, Gabriel Scheibler
  *
  * This file is part of ViSensor.
  *
@@ -34,9 +34,6 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.util.ArrayList;
-
-import static android.os.SystemClock.sleep;
-
 
 class VRmenuAdapter extends ArrayAdapter<String>
 {
@@ -150,8 +147,6 @@ class VRmenuAdapter extends ArrayAdapter<String>
                                 Toast.LENGTH_LONG).show();
 
                         Log.d(TAG, "OBJ file was not found");
-
-                        sleep(1000);//Some time to read the message.
                     }
 
                     Intent webVRIntent = new Intent(Intent.ACTION_VIEW);
